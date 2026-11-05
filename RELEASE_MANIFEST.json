@@ -1,6 +1,6 @@
 {
   "project": "A-Share-ETF-Flow",
-  "generated_at_utc": "2026-11-05T05:03:47+00:00",
+  "generated_at_utc": "2026-11-05T10:45:31+00:00",
   "files": [
     {
       "path": ".gitattributes",
@@ -529,8 +529,8 @@
     },
     {
       "path": "tests/test_public_release.py",
-      "bytes": 5390,
-      "sha256": "1144b84a2f4331f20c4eabc819448e0e54f455c03f4e4e259a106749e821af93"
+      "bytes": 5462,
+      "sha256": "820ca33896fbc8b2dbc44aead27256d089330bb4b2ed30cb212ba543586181c3"
     },
     {
       "path": "tests/test_refactor_regressions.py",

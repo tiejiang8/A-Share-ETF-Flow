@@ -105,7 +105,8 @@ def test_source_export_uses_allowlist_and_preserves_private_files(tmp_path):
     for name, content in files.items():
         path = source / name
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding='utf-8')
+        # Preserve the fixture's exact line endings on Windows and Unix.
+        path.write_bytes(content.encode('utf-8'))
     result = exporter.prepare_release(tmp_path / 'release', root=source)
     destination = Path(result['directory'])
     manifest = json.loads((destination / 'RELEASE_MANIFEST.json').read_text(encoding='utf-8'))
