@@ -1,175 +1,155 @@
 # A-Share-ETF-Flow
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+[简体中文](README.md) | [English](README.en.md)
 
-**Track A-share ETF flows and sector rotation using official disclosures, with automated, auditable daily reports, weekly reports and AI-readable summaries.**
+**看 A 股 ETF 的钱往哪儿走：哪些 ETF 获得净申购，哪些板块持续有资金进来。**
 
-Use it to see which ETFs and sectors receive net creations, whether flows persist
-or reverse, how concentrated they are, and whether share changes confirm price
-moves. Inputs are disclosed quotes, shares and NAVs; outputs are research reports,
-ETF and cluster tables, and structured summaries for AI agents and data pipelines.
-Incomplete real-market data produces an explicitly marked preview with blockers.
+这个工具从[上交所](https://www.sse.com.cn/)、[深交所](https://fund.szse.cn/)、[证监会基金电子披露网站](http://eid.csrc.gov.cn/fund/)等网站获取 ETF 份额、净值和行情，估算净申购、净赎回，生成日报和周报。每天的结果还会整理成文字和 JSON 摘要，方便交给 AI 阅读或接入自己的程序。
 
-The project collects exchange and authoritative fund disclosures, keeps dated
-source evidence, estimates ETF net creation/redemption, and produces daily and
-weekly research reports across **36 configured observation clusters**. Compact
-JSON and text summaries make the daily results usable without loading the full
-historical snapshot.
+## 能用它看什么
 
-| Project | Research question |
+- 哪些 ETF、哪些板块当天获得净申购，哪些出现净赎回？
+- 最近 5 个观察日，资金是在持续流入，还是已经转向？
+- 流入是集中在少数几只 ETF，还是同一板块的大多数 ETF 都在增加份额？
+- 价格上涨时，ETF 份额有没有一起增加？
+
+程序把 ETF 分成 **36 个指数、行业和主题分组**。每只 ETF 只计入一个主要分组，避免同一笔估算资金被重复相加。
+
+与另一个项目 [FP-DCF](https://github.com/tiejiang8/FP-DCF) 配合使用时：FP-DCF 用来拆解公司估值，这个项目用来观察 ETF 申赎和板块资金变化。
+
+## 数据从哪些网站来
+
+| 网站 | 主要取什么数据 |
 | --- | --- |
-| [FP-DCF](https://github.com/tiejiang8/FP-DCF) | What business assumptions support a valuation? |
-| A-Share-ETF-Flow | Where are ETF shares and estimated creation/redemption flows moving? |
+| [上海证券交易所](https://www.sse.com.cn/) | ETF 名单、基金份额、行情、申购赎回清单 |
+| [深圳证券交易所基金专区](https://fund.szse.cn/) | ETF 名单、历史份额、行情和净值 |
+| [证监会基金电子披露网站](http://eid.csrc.gov.cn/fund/) | 基金净值和公告，补查交易所数据缺口 |
+| [巨潮资讯网](https://www.cninfo.com.cn/) | 基金公告，核查拆分、份额折算等特殊情况 |
+| [巨潮深证信数据服务平台](https://webapi.cninfo.com.cn/) | 交易所行情请求失败时，补取日行情 |
 
-## Quickstart: offline example
+必要时，还会结合对应基金公司网站上的净值、申购赎回清单和公告核对。程序会保存来源网址、原始文件、抓取时间和数据所属日期，便于回头查数。具体请求地址和单位见[数据来源说明](docs/official_endpoints.md)。
 
-Python **3.10+**. Create and activate a virtual environment, then:
+**各网站更新时间不同，今天能拿到的行情、份额和净值不一定属于同一天。** 数据缺失、过期或检查未通过时，程序会把报告标成“预览”，并写明缺什么、哪里有问题。
 
-```bash
+## 先看一下输出长什么样
+
+需要 Python **3.10 或更新版本**。Windows PowerShell 中运行：
+
+```powershell
 git clone https://github.com/tiejiang8/A-Share-ETF-Flow.git
 cd A-Share-ETF-Flow
 python -m venv .venv
-# Activate .venv with the shell-specific command below.
+.\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
 python scripts/run_offline_example.py
 ```
 
-The example uses explicitly **fictional** records and requires no network. Open
-`outputs/demo/2026-01-05/llms.txt` or `summary.json`. The example has its own
-latest pointer and cannot become a formal market report. Checked-in output is
-available under [examples/](examples/README.md).
+macOS / Linux 创建虚拟环境后，用 `source .venv/bin/activate` 激活，再执行安装和示例命令。
 
-For PowerShell activation use `.venv\Scripts\Activate.ps1`; for POSIX shells use
-`source .venv/bin/activate` after `python -m venv .venv`.
+这个示例**不联网，只用虚构数据**演示分组计算和摘要输出。运行后打开：
 
-## Collect real data
+- `outputs/demo/2026-01-05/snapshot.md`：精简文字快照。
+- `outputs/demo/2026-01-05/llms.txt`：适合交给 AI 阅读的文字。
+- `outputs/demo/2026-01-05/summary.json`：供程序读取的数据。
 
-Run from an environment with working access to the official sources:
+示例有独立的目录和索引，不会混进真实日报。也可以直接查看仓库里的[示例文件](examples/README.md)。
 
-```bash
+## 跑一份真实日报
+
+在能访问上面这些网站的网络环境中运行：
+
+```powershell
+# 让程序选择统计日期
 python -m etf_temperature.cli run --date auto
+
+# 指定交易日，并检查、补取最近 2 个交易日的数据
 python -m etf_temperature.cli run --date YYYY-MM-DD --refresh-recent-days 2
+
+# 查看该日期的数据检查结果
 python -m etf_temperature.cli validate --date YYYY-MM-DD
 ```
 
-Replace `YYYY-MM-DD` with an actual trading date. Complete snapshots are reused
-by default. Recent refreshes check the structured cache before making requests;
-they do not unconditionally download every row again. Quote, share and NAV
-publication can be asynchronous. The first run may take substantially longer
-than an incremental run.
+把 `YYYY-MM-DD` 换成真实交易日，也支持 `YYYYMMDD`。已有完整数据时，程序会优先使用本地缓存；首次采集通常比后续更新慢。
 
-Daily generation and validation return **0** when the formal quality gate
-passes, or **2** when a preview is retained because data or validation is
-incomplete. Inspect the dated validation artifact; a completed command alone
-does not establish data readiness.
+运行后先看 `outputs/<date>/validation.md`：它会说明拿到了多少数据、数据日期是否合适，以及能否生成正式报告。日报生成和检查命令返回 **0** 表示正式报告检查通过，返回 **2** 表示保留预览并列出未通过的原因。
 
-Some official quote fallback paths require a browser:
+部分行情补取功能需要浏览器组件：
 
-```bash
+```powershell
 python -m pip install -e ".[browser,dev]"
 python -m playwright install chromium
 ```
 
-Explicit dates also accept `YYYYMMDD`. See the [operations guide](docs/OPERATIONS.zh-CN.md)
-for backfills, complete refreshes, rebuilding and weekly report workflows.
+周报、历史数据补取、完整刷新等操作见[运行维护手册](docs/OPERATIONS.zh-CN.md)。
 
-## Outputs
+## 结果保存在哪里
 
-| File | Purpose |
+| 文件 | 用途 |
 | --- | --- |
-| `outputs/<date>/A股ETF资金温度日报_<date>.md` | Daily report, with status and scope |
-| `outputs/<date>/validation.md` | Coverage, freshness and formal blockers |
-| `outputs/<date>/daily_etf.parquet` | Normalized ETF-level observations |
-| `outputs/<date>/daily_cluster.parquet` | Classified cluster aggregates |
-| `outputs/<date>/summary.json` | Versioned machine-readable daily summary |
-| `outputs/<date>/llms.txt` | Compact text for AI consumption |
-| `outputs/<date>/snapshot.md` | Human-readable compact snapshot |
-| `outputs/latest.json` | Relative paths and key values for the latest daily summary |
-| `outputs/summary_index.json` | One entry per summarized date |
+| `outputs/<date>/A股ETF资金温度日报_<date>.md` | 完整日报，包含正式或预览状态 |
+| `outputs/<date>/validation.md` | 数据拿全没有、日期是否合适、哪些检查未通过 |
+| `outputs/<date>/snapshot.md` | 精简版文字快照 |
+| `outputs/<date>/llms.txt` | 给 AI 阅读的精简文字 |
+| `outputs/<date>/summary.json` | 给程序读取的摘要数据 |
+| `outputs/<date>/daily_etf.parquet` | 每只 ETF 的明细数据 |
+| `outputs/<date>/daily_cluster.parquet` | 按指数、行业和主题分组的汇总数据 |
+| `outputs/latest.json` | 最新一份日报摘要的位置和关键数字 |
+| `outputs/summary_index.json` | 已生成摘要的日期列表 |
 
-Rebuild summaries without collection or report rendering:
+只想用本地数据重新生成摘要，可以运行：
 
-```bash
+```powershell
 python -m etf_temperature.cli make-summary --date YYYY-MM-DD
 ```
 
-This command reads dated local history. It does not refresh market inputs.
-Unchanged output preserves bytes and modification times. Cross-process writer
-locking protects the index and prevents an older date from replacing the latest
-pointer. See [AI integration](docs/AI_INTEGRATION.md) and
-[JSON contracts](contracts/README.md). Daily summaries are implemented; weekly
-reports currently have no corresponding summary trio.
+这条命令不联网，也不重写日报。摘要内容没有变化时，文件和修改时间保持不变；重建旧日期的摘要不会把“最新摘要”退回旧日期。**目前只有日报有这套摘要，周报暂未提供对应摘要。** AI 接入方法和字段说明见 [AI 接入说明](docs/AI_INTEGRATION.md)及 [JSON 格式说明](contracts/README.md)。
 
-## Method and data quality
+## “资金流入”是怎么算的
+
+这里估算的是 ETF 的**净申购赎回**：
 
 ```text
-Estimated net creation/redemption (100m yuan)
-  = (shares on T - shares on previous trading day) * NAV on T / 100,000,000
+估算净申购赎回（亿元）
+  =（当日份额（份）－上一交易日份额（份））× 当日单位净值（元/份）÷ 1亿
 ```
 
-Shares are in units; NAV is yuan per unit. The five-observation cumulative flow
-uses adjusted daily estimates. ETF traded turnover measures secondary-market
-activity and is a separate metric. Changes in AUM also contain price effects.
+例如，某只 ETF 的份额增加了 1 亿份，当日单位净值为 1.20 元，估算净申购就是 **1.20 亿元**。遇到份额拆分、折算等特殊情况，程序会先检查并调整，再决定是否纳入汇总。最近 5 个观察日的累计值，由调整后的逐日估算值相加得到。
 
-- Preserve raw evidence, source URLs, economic dates and source priorities.
-- Distinguish a measured zero from an unavailable flow.
-- Publish field availability separately from economic-date freshness.
-- Audit corporate actions and extreme flows before admitting them to aggregates.
-- Publish both ETF-count and size-weighted coverage.
-- Separate ETF-wide totals from classified cluster totals and disclose the
-  unclassified contribution.
-- Retain a visibly non-formal preview when quality gates fail.
+阅读时请分清几个数字：
 
-Sources include SSE, SZSE, the CSRC fund disclosure system, CNINFO market-data
-services, and verified fund-manager disclosures. Third-party evidence has a
-separate validation role. Source details and units are documented in
-[official endpoints](docs/official_endpoints.md),
-[the data dictionary](docs/data_dictionary.md), and
-[cluster methodology](docs/cluster_methodology.md).
+- **净申购赎回**：根据份额变化和净值估算，不能当作精确现金流水。
+- **成交额**：二级市场买卖了多少，不等于有多少资金净流入 ETF。
+- **基金规模变化**：同时受份额变化和价格涨跌影响。
 
-The data describes aggregate ETF activity and cannot identify a particular
-subscriber such as Central Huijin. Temperature and structure labels are
-descriptive observations; predictive performance and profitability are not
-established by passing technical validation.
+没有拿到有效数据时会显示缺失，不会直接填成 0。报告也会分别说明“字段有数值”和“数据日期符合要求”的比例，并同时检查 ETF 只数及规模覆盖情况。全市场合计与已分类分组合计分开列出，未分类 ETF 的贡献会单独说明。
 
-## Project structure
+这些数据无法识别申购者是谁，也不能据此断定中央汇金是否买入。报告里的“温度”、流入持续性等标签用于描述已发生的变化，不代表经过验证的买卖信号。详细字段和分类规则见[数据字典](docs/data_dictionary.md)及[分组方法](docs/cluster_methodology.md)。
+
+## 给维护者
 
 ```text
-config/                  Authoritative classification and quality policies
-contracts/               JSON summary, pointer and index schemas
-examples/                Explicitly synthetic offline input and output
-src/etf_temperature/     Collection, calculation, report and summary engine
-scripts/                 Run, distribution-check and source-export helpers
-tests/                   Portable tests plus explicit local-data checks
-docs/                    Methodology, AI integration and operations
-.github/                 Portable CI and contribution template
-data/                    Local source evidence and caches (not published)
-outputs/                 Local reports and summaries (not published)
+config/                  分类和数据检查规则
+contracts/               JSON 摘要格式定义
+examples/                虚构数据示例
+src/etf_temperature/     采集、计算、报告和摘要代码
+scripts/                 运行、安装包检查和发布工具
+tests/                   测试
+docs/                    方法说明和维护手册
+data/                    本机原始数据及缓存，不上传
+outputs/                 本机报告及摘要，不上传
 ```
 
-Source checkouts retain the project root as their runtime workspace. Installed
-wheels use the current directory and include default YAML configuration.
-Set `ETF_FLOW_HOME` to use a different writable workspace; a complete `config/`
-there overrides bundled defaults. The existing Python distribution name
-`a-share-etf-temperature` and command `etf-temperature` remain compatible.
+从源码运行时，数据默认放在项目目录。通过安装包运行时，默认放在当前目录；可用 `ETF_FLOW_HOME` 指定其他可写目录，其下完整的 `config/` 可以覆盖默认配置。安装包名称仍为 `a-share-etf-temperature`，命令仍为 `etf-temperature`。
 
-## Development and release
-
-```bash
+```powershell
 python -m pytest -q
 python -m build
 python scripts/check_distribution.py
 python scripts/prepare_github_release.py
 ```
 
-Default tests run without live collection or operator caches. Two tests marked
-`local_data` are opt-in via `python -m pytest -q -m local_data`. The known
-2026-07-14 historical-cache mismatch remains explicit in [CHANGELOG.md](CHANGELOG.md).
-Portable checks do not certify that local history or current exchange access.
+默认测试使用固定样本和模拟响应，不访问交易所，也不需要本机历史数据。两项历史数据测试需用 `python -m pytest -q -m local_data` 单独执行；其中 2026-07-14 的历史回归仍有已知差异，见 [CHANGELOG.md](CHANGELOG.md)。默认测试通过不代表当天数据已采集完整。
 
-The exporter creates a new allowlisted source directory and ZIP with a checksum
-manifest. It excludes data, generated real reports, credentials, environments,
-logs and assistant state. See [GitHub release preparation](docs/GITHUB_RELEASE.md),
-[contributing](CONTRIBUTING.md), and [security](SECURITY.md).
+发布工具会在 `dist/github/` 生成新的源码目录和 ZIP，附带文件校验清单，排除本机数据、真实报告、运行环境、日志、凭据和助手状态。[发布说明](docs/GITHUB_RELEASE.md) · [参与开发](CONTRIBUTING.md) · [安全说明](SECURITY.md)。
 
-No license has been selected; see the release guide for that status.
+项目目前尚未选择许可证。

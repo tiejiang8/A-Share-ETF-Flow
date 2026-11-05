@@ -1,4 +1,4 @@
-include README.md README.zh-CN.md CONTRIBUTING.md SECURITY.md CHANGELOG.md
+include README.md README.en.md README.zh-CN.md CONTRIBUTING.md SECURITY.md CHANGELOG.md
 recursive-include config *.yaml
 recursive-include contracts *.json
 recursive-include docs *.md

@@ -11,7 +11,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 DIRECTORIES = {".github", "config", "contracts", "docs", "examples", "scripts", "src", "tests", "etf_temperature"}
-FILES = {".gitignore", ".gitattributes", "README.md", "README.zh-CN.md", "CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md", "LICENSE", "LICENSE.md", "NOTICE", "pyproject.toml", "setup.py", "MANIFEST.in", "CHANGELOG_W28_NAV_BACKFILL.md"}
+FILES = {".gitignore", ".gitattributes", "README.md", "README.en.md", "README.zh-CN.md", "CONTRIBUTING.md", "SECURITY.md", "CHANGELOG.md", "LICENSE", "LICENSE.md", "NOTICE", "pyproject.toml", "setup.py", "MANIFEST.in", "CHANGELOG_W28_NAV_BACKFILL.md"}
 SUFFIXES = {".py", ".ps1", ".md", ".json", ".yaml", ".yml", ".txt", ".toml"}
 EXCLUDED_PARTS = {"__pycache__", ".pytest_cache", ".venv", "node_modules", ".git", "_default_config", ".workbuddy", ".codex", ".agents", ".baoyu-skills", ".tmp", "tmp"}
 

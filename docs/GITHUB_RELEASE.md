@@ -4,7 +4,10 @@ Target repository name: **A-Share-ETF-Flow**, alongside `tiejiang8/FP-DCF`.
 
 Suggested description:
 
-> 用官方披露数据追踪 A 股 ETF 资金流向与板块轮动，生成可追溯的日报、周报和 AI 摘要。Track A-share ETF flows and sector rotation with auditable reports and AI-readable summaries.
+> 看 A 股 ETF 的钱往哪儿走：从上交所、深交所、证监会等网站获取份额、净值和行情，生成资金流向日报、周报和 AI 摘要。
+
+The default [README](../README.md) is in Chinese. An [English version](../README.en.md)
+is available separately; the repository About description is primarily Chinese.
 
 Suggested topics: `etf`, `a-shares`, `fund-flows`, `market-structure`, `finance`,
 `python`, `llm`.

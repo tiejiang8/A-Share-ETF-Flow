@@ -1,6 +1,6 @@
 {
   "project": "A-Share-ETF-Flow",
-  "generated_at_utc": "2026-11-05T10:45:31+00:00",
+  "generated_at_utc": "2026-11-05T11:15:42+00:00",
   "files": [
     {
       "path": ".gitattributes",
@@ -39,18 +39,23 @@
     },
     {
       "path": "MANIFEST.in",
-      "bytes": 490,
-      "sha256": "6e343ae7b089ef5e1fb607d830afb529f3e0a11466299fbd4dccd9a83cb31aa7"
+      "bytes": 503,
+      "sha256": "9dfb5af52246674d7d643c07c1c12c358c394d26f19d2d56349d887bb7d8757c"
+    },
+    {
+      "path": "README.en.md",
+      "bytes": 8751,
+      "sha256": "ed0a6868d88316b4e643b8ed30ffb91060a049ef634f5b89c13146623eff7366"
     },
     {
       "path": "README.md",
-      "bytes": 7996,
-      "sha256": "1e713abc6386104dba1cef1126cd6ac569d96363cc0fab0711cecb021de8e92c"
+      "bytes": 8732,
+      "sha256": "d213fa57dae78af4e11e1467c4a0432d739cc83832dd20403777aa74a327cba3"
     },
     {
       "path": "README.zh-CN.md",
-      "bytes": 7209,
-      "sha256": "8ee82cc2dcf288e7cafa186b8667d6436027aaab4cc8d36543649dad1493d6f5"
+      "bytes": 121,
+      "sha256": "07504cb6a19577bc2c2e3ffe435987a0001bdaaec3ba53620b08d85343f30479"
     },
     {
       "path": "SECURITY.md",
@@ -129,13 +134,13 @@
     },
     {
       "path": "docs/GITHUB_RELEASE.md",
-      "bytes": 2561,
-      "sha256": "f2043a16d7b704f0d3e7d553115c08625c9387fdf5398c4fa140c15c2ae7a73c"
+      "bytes": 2682,
+      "sha256": "6ee1ac200fa85107b3198c629579563c3c01f24edfcbe7072676c9a463164ccc"
     },
     {
       "path": "docs/OPERATIONS.zh-CN.md",
-      "bytes": 32246,
-      "sha256": "dc35fe41d14568d1b838e9ca5cd4b3bd80eaf08ec36b68101edec4ab79a09783"
+      "bytes": 32233,
+      "sha256": "aaf51f19a86debee2df4952a745194d928e3f467fd39914d038c4ded429b3b55"
     },
     {
       "path": "docs/authoritative_fallback_sources.md",
@@ -214,8 +219,8 @@
     },
     {
       "path": "scripts/prepare_github_release.py",
-      "bytes": 3631,
-      "sha256": "4d26d33308ccabd30a923b79289f2cced768ca303cb215f34dbf8e10707f2ce8"
+      "bytes": 3647,
+      "sha256": "b7b092729f5305bdcccb95b48901835f77515390cb8db04155e74e7a767d66b1"
     },
     {
       "path": "scripts/publish_wechat_checked.ps1",
