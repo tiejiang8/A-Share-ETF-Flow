@@ -1,0 +1,9 @@
+suspensions:
+  - etf_code: "159515"
+    date: "2026-07-30"
+    announcement_date: "2026-06-29"
+    reason: "基金份额持有人大会计票日，自开市起停牌。"
+    source: "szse_official:基金公告"
+    source_url: "https://disc.static.szse.cn/disc/disk03/finalpage/2026-06-29/cddc0daf-2220-4227-b73a-2c0c6d0c0521.PDF"
+    local_evidence_path: "data/raw/official_suspensions/159515_2026-07-30.pdf"
+    evidence_sha256: "75d5ad8eecfdbcfc1a7c87f2ac9edcecbb60f3b7028d5037b20ab8d92776f9ad"

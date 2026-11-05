@@ -1,0 +1,15 @@
+# 官方确认已进入终止/清算程序的标的。
+#
+# 用途：清盘流程中份额尚未注销（share_ratio != 0），因此 corporate_actions 的
+# 「份额归零」判定无法覆盖。此表以官方公告为凭，按生效日把标的显式判为 liquidation，
+# 使其收益与资金流被剔除，而不是以「未解决极端资金流」的形式阻断整份日报。
+#
+# 字段要求：etf_code、effective_date（进入清算/停牌终止首日）、reason、source_url。
+# 生效日当天及之后均按终止处理。
+
+terminations:
+  - etf_code: "512390"
+    effective_date: "2026-09-09"
+    reason: "基金份额持有人大会于 2026-09-07 表决通过终止基金合同并终止上市；自 2026-09-09 起进入基金清算程序，不再复牌且不恢复申购赎回。"
+    source: "sse_official:基金公告"
+    source_url: "https://www.sse.com.cn/disclosure/fund/announcement/c/new/2026-09-03/512390_20260903_FGQ7.pdf"

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "a-share-etf-temperature"
+version = "0.1.0"
+description = "Auditable A-share equity ETF flow, market structure, daily reports and AI-readable summaries."
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["etf", "a-shares", "fund-flows", "market-structure", "finance", "llm"]
+dependencies = [
+  "numpy>=1.24,<3",
+  "pandas>=2.0,<3",
+  "openpyxl>=3.1,<4",
+  "pyarrow>=14,<23",
+  "PyYAML>=6,<7",
+  "requests>=2.31,<3",
+  "matplotlib>=3.8,<4",
+  "tabulate>=0.9,<1",
+]
+
+[project.optional-dependencies]
+browser = ["playwright>=1.45,<2"]
+dev = ["pytest>=8,<9", "jsonschema>=4.23,<5", "build>=1.2,<2"]
+
+[project.urls]
+Repository = "https://github.com/tiejiang8/A-Share-ETF-Flow"
+Issues = "https://github.com/tiejiang8/A-Share-ETF-Flow/issues"
+
+[project.scripts]
+etf-temperature = "etf_temperature.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-m 'not local_data'"
+markers = [
+  "local_data: requires an operator's local historical data; excluded from portable checks",
+]

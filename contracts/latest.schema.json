@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "A-Share-ETF-Flow latest daily pointer v1.0",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "asof": {
+      "type": "string",
+      "format": "date"
+    },
+    "report_status": {
+      "enum": [
+        "正式报告",
+        "预览/数据待补全"
+      ]
+    },
+    "formal_report_allowed": {
+      "type": "boolean"
+    },
+    "formal_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "flow_1d_100m": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "flow_5d_100m": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "total_size_100m": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "flow_size_coverage": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "quote_coverage": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "share_coverage": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "nav_coverage": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "quote_fresh_coverage": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "share_fresh_coverage": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "nav_fresh_coverage": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "flow_valid_etf_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "flow_missing_etf_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "coverage_note": {
+      "type": "string"
+    },
+    "identity_note": {
+      "type": "string"
+    },
+    "summary_path": {
+      "type": "string"
+    },
+    "llms_path": {
+      "type": "string"
+    },
+    "snapshot_path": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "asof",
+    "report_status",
+    "formal_report_allowed",
+    "formal_blockers",
+    "content_hash",
+    "flow_1d_100m",
+    "flow_5d_100m",
+    "total_size_100m",
+    "flow_size_coverage",
+    "quote_coverage",
+    "share_coverage",
+    "nav_coverage",
+    "quote_fresh_coverage",
+    "share_fresh_coverage",
+    "nav_fresh_coverage",
+    "flow_valid_etf_count",
+    "flow_missing_etf_count",
+    "coverage_note",
+    "identity_note",
+    "summary_path",
+    "llms_path",
+    "snapshot_path"
+  ],
+  "additionalProperties": false
+}

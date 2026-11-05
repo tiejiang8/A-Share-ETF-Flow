@@ -1,0 +1,155 @@
+product_temperature_weights:
+  price_trend: 0.20
+  short_momentum: 0.15
+  turnover_activity: 0.10
+  one_day_net_subscription_to_size: 0.20
+  five_day_net_subscription_to_size: 0.20
+  price_volume_share_consistency: 0.10
+  premium_discount_risk: 0.05
+final_temperature_weights:
+  absolute_temperature: 0.70
+  market_percentile_temperature: 0.18
+  cluster_percentile_temperature: 0.12
+cluster_temperature_weights:
+  weighted_price_trend: 0.20
+  cluster_momentum: 0.15
+  turnover_relative_level: 0.10
+  one_day_net_subscription_to_size: 0.20
+  five_day_net_subscription_to_size: 0.20
+  member_breadth: 0.10
+  premium_discount_risk: 0.05
+scaling:
+  price_trend:
+    low: -0.05
+    high: 0.05
+  momentum:
+    low: -0.08
+    high: 0.08
+  turnover_activity:
+    low: 0.50
+    high: 2.00
+  one_day_net_subscription_to_size:
+    low: -0.03
+    high: 0.03
+  five_day_net_subscription_to_size:
+    low: -0.08
+    high: 0.08
+  premium_discount_abs:
+    max: 0.05
+  cluster_weighted_price_trend:
+    low: -5.0
+    high: 5.0
+  cluster_momentum:
+    low: -0.08
+    high: 0.08
+  cluster_turnover_relative_level:
+    low: 0.50
+    high: 2.00
+  cluster_net_subscription_to_size:
+    low: -0.03
+    high: 0.03
+  cluster_five_day_net_subscription_to_size:
+    low: -0.08
+    high: 0.08
+thresholds:
+  min_temperature: 0
+  max_temperature: 100
+  daily_min_quote_coverage: 0.98
+  daily_min_share_coverage: 0.98
+  daily_min_nav_coverage: 0.95
+  daily_min_nav_fresh_coverage: 0.95
+  daily_min_flow_size_coverage: 0.95
+  daily_min_cluster_flow_size_coverage: 0.90
+  min_concentration_abs_flow_100m: 1.0
+  min_concentration_flow_to_size: 0.005
+  daily_max_nav_lag_days: 0
+  winsor_quantile_low: 0.02
+  winsor_quantile_high: 0.98
+  share_jump_review_threshold: 0.20
+  corporate_action_value_tolerance: 0.15
+  high_temperature: 75
+  very_high_temperature: 85
+  warming_min_delta: 0
+  cooling_from_high_min_previous_temperature: 75
+  weekly_min_trading_days: 5
+  weekly_min_etf_coverage: 0.98
+  weekly_min_full_week_coverage: 0.95
+  weekly_min_quote_coverage: 0.98
+  weekly_min_flow_coverage: 0.95
+  weekly_min_share_cell_coverage: 0.98
+  weekly_min_flow_cell_coverage: 0.95
+  weekly_min_flow_size_coverage: 0.95
+  weekly_min_material_cluster_flow_size_coverage: 0.90
+  weekly_material_cluster_min_size_share: 0.01
+  weekly_min_classified_scale_coverage: 0.95
+  weekly_min_classified_turnover_coverage: 0.90
+  weekly_min_classified_flow_coverage: 0.90
+  weekly_min_cluster_count: 36
+flow_structure:
+  direction_epsilon_100m: 0.01
+  acceleration_ratio_min_denominator_100m: 0.10
+  gross_flow_abs_min_100m: 1.0
+  gross_flow_to_size_min: 0.001
+  net_flow_abs_min_100m: 5.0
+  net_flow_to_size_min: 0.005
+  high_offset_ratio: 0.70
+  medium_offset_ratio: 0.40
+  one_sided_net_ratio: 0.70
+  breadth_high_ratio: 0.60
+  breadth_low_ratio: 0.40
+  max_contributor_concentration_ratio: 0.50
+  top3_contributor_concentration_ratio: 0.80
+  diffusion_max_offset_ratio: 0.40
+corporate_actions:
+  share_ratio_upper: 1.25
+  share_ratio_lower: 0.80
+  nav_product_tolerance: 0.08
+  price_product_tolerance: 0.10
+  aum_ratio_lower: 0.75
+  aum_ratio_upper: 1.30
+  factor_snap_tolerance: 0.08
+  suspect_min_reciprocal_move_fraction: 0.40
+  weekly_price_match_radius: 2
+  weekly_price_match_max_abs_return: 0.30
+  weekly_adjustment_max_abs_return: 0.30
+  common_factors: [0.1, 0.2, 0.25, 0.3333333333, 0.5, 2.0, 3.0, 4.0, 5.0, 10.0]
+consistency_scores:
+  price_up_share_up: 100
+  price_down_share_up: 70
+  price_up_share_down: 30
+  price_down_share_down: 0
+  flat_or_missing: 50
+history:
+  temperature_slope_window: 5
+  signal_window: 5
+  flow_positive_window: 5
+  change_3d_lag: 3
+  continuous_warming_days: 3
+trading_calendar:
+  # 节假日导致的周内交易日不足 5 天时在此登记，否则周报会按满周口径校验并报错。
+  # 依据：国务院办公厅 2026 年节假日安排 + 沪深北交易所 2026 年休市公告。
+  weekly_last_trading_day_overrides:
+    2026-W39: 2026-09-24  # 中秋 09-25~09-27 休市，09-28 起复市
+    2026-W40: 2026-09-30  # 国庆 10-01~10-07 休市，10-08 起复市
+    2026-W41: 2026-10-09
+  weekly_expected_trading_days_overrides:
+    2026-W39: 4  # 09-21 ~ 09-24
+    2026-W40: 3  # 09-28 ~ 09-30
+    2026-W41: 2  # 10-08 ~ 10-09
+report:
+  abnormal_pool_size: 50
+  candidate_rule_top_n: 50
+  main_cluster_flow_top_n: 20
+  main_abnormal_top_n: 20
+  appendix_top_n: 50
+  watchlist_top_n: 30
+  watchlist_max_per_cluster: 3
+  main_chart_top_n: 5
+  tracking_chart_pool_top_n: 5
+  min_backtest_trading_days: 60
+  min_concentration_member_count: 4
+limits:
+  min_temperature: 0
+  max_temperature: 100
+  winsor_quantile_low: 0.02
+  winsor_quantile_high: 0.98

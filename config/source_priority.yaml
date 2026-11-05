@@ -1,0 +1,38 @@
+sources:
+  - priority: 1
+    name: sse_official
+    source_type: official
+    description: 上海证券交易所官方批量数据、动态接口、ETF详情页
+  - priority: 1
+    name: szse_official
+    source_type: official
+    description: 深圳证券交易所官方批量数据、动态接口、ETF详情页
+  - priority: 2
+    name: csrc_eid
+    source_type: official_disclosure
+    description: 中国证监会基金电子披露网站，补齐净值、净值日报、公告和公司行为证据
+  - priority: 2
+    name: cninfo_nsdk
+    source_type: official_market_data_fallback
+    description: 深圳证券信息/巨潮深证信数据服务平台浏览器行情SDK，补齐交易所行情接口不可用时的ETF日K线
+  - priority: 3
+    name: cninfo
+    source_type: official_disclosure
+    description: 巨潮资讯网，补齐深市基金公告、申购赎回相关披露和公司行为证据
+  - priority: 3
+    name: fund_company
+    source_type: official_fund_company
+    description: 基金公司官网补齐净值、申购赎回清单、公告和公司行为
+  - priority: 4
+    name: index_company
+    source_type: official_index_company
+    description: 中证指数、国证指数等指数公司
+  - priority: 5
+    name: third_party
+    source_type: third_party
+    description: 仅用于官方接口故障回退或交叉验证
+rules:
+  primary_data_source: exchange_official
+  akshare_as_primary: false
+  turnover_is_flow: false
+  share_change_flow_note: 估算净申购/赎回金额，不等于基金精确现金流。

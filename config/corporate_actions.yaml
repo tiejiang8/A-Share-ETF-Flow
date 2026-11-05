@@ -1,0 +1,11 @@
+rules:
+  share_jump_review_threshold: 0.20
+  split_or_conversion_keywords:
+    - 份额拆分
+    - 份额合并
+    - 净值折算
+    - 除权
+    - 转型
+    - 终止上市
+    - 清盘
+  action_required_note: 份额单日变化超过20%时优先检查公司行为，不得将拆分造成的份额变化解释为资金流入。

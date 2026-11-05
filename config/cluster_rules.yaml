@@ -1,0 +1,1541 @@
+clusters:
+- cluster_id: C01
+  cluster_name: 上证50
+  include_index_codes:
+  - '000016'
+  include_index_keywords:
+  - 上证50
+  - 上证 50
+  - SH50
+  include_etf_keywords:
+  - 上证50
+  - SH50
+  exclude_keywords:
+  - 科创50
+  - 创业板50
+  classification_priority: 10
+  representative_policy: size_liquidity_completeness
+  notes: 核心大盘风格。
+  exact_index_codes:
+  - '000016'
+  exact_index_names: []
+  index_name_patterns:
+  - 上证50
+  - 上证 50
+  - SH50
+  etf_name_patterns:
+  - 上证50
+  - SH50
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 科创50
+  - 创业板50
+  priority: 10
+  manual_overrides: []
+- cluster_id: C02
+  cluster_name: 大盘宽基
+  include_index_codes:
+  - '000300'
+  - '399300'
+  - '399001'
+  - '000001'
+  - '000010'
+  - '000903'
+  - '000906'
+  - '930050'
+  - '830009'
+  - 746059.MI
+  - '931052'
+  - '399330'
+  - 716567.MI
+  - 718711.MI
+  - '399373'
+  - '399372'
+  - '399850'
+  - '000918'
+  - '000919'
+  - '931586'
+  - '931589'
+  - '930903'
+  include_index_keywords: []
+  include_etf_keywords:
+  - 沪深300ETF
+  - HS300ETF
+  - 深成ETF
+  - 深证成指ETF
+  - 中证800ETF
+  - 上证180ETF
+  - 综指ETF
+  - 上证指数ETF
+  - 中证A100ETF
+  - A100ETF
+  exclude_keywords:
+  - 中证A500
+  - 中证500
+  - 创业板
+  - 非银行金融
+  - 证券
+  - 券商
+  - 保险
+  classification_priority: 20
+  representative_policy: size_liquidity_completeness
+  notes: 大盘宽基观察桶；只接受明确的宽基指数代码、精确指数名称或专用ETF名称，不吸收行业子指数。
+  exact_index_codes:
+  - '000300'
+  - '399300'
+  - '399001'
+  - '000001'
+  - '000010'
+  - '000903'
+  - '000906'
+  - '930050'
+  - '830009'
+  - 746059.MI
+  - '931052'
+  - '399330'
+  - 716567.MI
+  - 718711.MI
+  - '399373'
+  - '399372'
+  - '399850'
+  - '000918'
+  - '000919'
+  - '931586'
+  - '931589'
+  - '930903'
+  exact_index_names:
+  - 沪深300指数
+  - 深证成指
+  - 中证800指数
+  - 上证180指数
+  - 上证综合指数
+  - 中证100指数
+  - 中证A100指数
+  - 中证A50指数
+  - 富时中国A50指数
+  - MSCI中国A50互联互通人民币指数
+  index_name_patterns: []
+  etf_name_patterns:
+  - 沪深300ETF
+  - HS300ETF
+  - 深成ETF
+  - 深证成指ETF
+  - 中证800ETF
+  - 上证180ETF
+  - 综指ETF
+  - 上证指数ETF
+  - 中证A100ETF
+  - A100ETF
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 中证A500
+  - 中证500
+  - 创业板
+  - 非银行金融
+  - 证券
+  - 券商
+  - 保险
+  priority: 20
+  manual_overrides: []
+- cluster_id: C03
+  cluster_name: 中证A500
+  include_index_codes:
+  - '000510'
+  include_index_keywords:
+  - 中证A500
+  - A500
+  include_etf_keywords:
+  - A500
+  - 中证A500
+  exclude_keywords: []
+  classification_priority: 5
+  representative_policy: size_liquidity_completeness
+  notes: A500优先于中证500关键词。
+  exact_index_codes:
+  - '000510'
+  exact_index_names: []
+  index_name_patterns:
+  - 中证A500
+  - A500
+  etf_name_patterns:
+  - A500
+  - 中证A500
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 5
+  manual_overrides: []
+- cluster_id: C04
+  cluster_name: 中证500
+  include_index_codes:
+  - 000905
+  - '399905'
+  include_index_keywords:
+  - 中证500
+  include_etf_keywords:
+  - 中证500
+  - 500ETF
+  exclude_keywords:
+  - 中证A500
+  - 中证1000
+  - 中证2000
+  classification_priority: 30
+  representative_policy: size_liquidity_completeness
+  notes: 中盘宽基。
+  exact_index_codes:
+  - 000905
+  - '399905'
+  exact_index_names: []
+  index_name_patterns:
+  - 中证500
+  etf_name_patterns:
+  - 中证500
+  - 500ETF
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 中证A500
+  - 中证1000
+  - 中证2000
+  priority: 30
+  manual_overrides: []
+- cluster_id: C05
+  cluster_name: 中证1000
+  include_index_codes:
+  - 000852
+  - '399852'
+  include_index_keywords:
+  - 中证1000
+  - 1000指数
+  include_etf_keywords:
+  - 中证1000
+  - 1000ETF
+  exclude_keywords:
+  - 中证2000
+  classification_priority: 35
+  representative_policy: size_liquidity_completeness
+  notes: 小盘宽基。
+  exact_index_codes:
+  - 000852
+  - '399852'
+  exact_index_names: []
+  index_name_patterns:
+  - 中证1000
+  - 1000指数
+  etf_name_patterns:
+  - 中证1000
+  - 1000ETF
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 中证2000
+  priority: 35
+  manual_overrides: []
+- cluster_id: C06
+  cluster_name: 中证2000
+  include_index_codes:
+  - '932000'
+  include_index_keywords:
+  - 中证2000
+  - 2000指数
+  include_etf_keywords:
+  - 中证2000
+  - 2000ETF
+  exclude_keywords: []
+  classification_priority: 36
+  representative_policy: size_liquidity_completeness
+  notes: 微盘宽基。
+  exact_index_codes:
+  - '932000'
+  exact_index_names: []
+  index_name_patterns:
+  - 中证2000
+  - 2000指数
+  etf_name_patterns:
+  - 中证2000
+  - 2000ETF
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 36
+  manual_overrides: []
+- cluster_id: C07
+  cluster_name: 创业板
+  include_index_codes:
+  - '399006'
+  - '399293'
+  include_index_keywords:
+  - 创业板指
+  - 创业板指数
+  - 创业成长
+  - 创业200
+  - 创业300
+  - 创业板综
+  - 创业板成长
+  - 创业大盘
+  include_etf_keywords:
+  - 创业板ETF
+  - 创业板指
+  - 创业板成长
+  - 创业板200
+  - 创业板300
+  - 创业板综
+  - 创业综指
+  - 创业成长
+  - 创业大盘
+  exclude_keywords:
+  - 创业板50
+  - 科创创业
+  - 双创
+  - 创50
+  - 创业板科技
+  - 科创
+  - 上证科创板成长
+  classification_priority: 60
+  representative_policy: size_liquidity_completeness
+  notes: 创业板普通宽基。
+  exact_index_codes:
+  - '399006'
+  - '399293'
+  exact_index_names: []
+  index_name_patterns:
+  - 创业板指
+  - 创业板指数
+  - 创业成长
+  - 创业200
+  - 创业300
+  - 创业板综
+  - 创业板成长
+  - 创业大盘
+  etf_name_patterns:
+  - 创业板ETF
+  - 创业板指
+  - 创业板成长
+  - 创业板200
+  - 创业板300
+  - 创业板综
+  - 创业综指
+  - 创业成长
+  - 创业大盘
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 创业板50
+  - 科创创业
+  - 双创
+  - 创50
+  - 创业板科技
+  - 科创
+  - 上证科创板成长
+  priority: 60
+  manual_overrides: []
+- cluster_id: C08
+  cluster_name: 创业板50
+  include_index_codes:
+  - '399673'
+  include_index_keywords:
+  - 创业板50
+  include_etf_keywords:
+  - 创业板50
+  - 创50
+  exclude_keywords: []
+  classification_priority: 50
+  representative_policy: size_liquidity_completeness
+  notes: 创业板50优先于创业板。
+  exact_index_codes:
+  - '399673'
+  exact_index_names: []
+  index_name_patterns:
+  - 创业板50
+  etf_name_patterns:
+  - 创业板50
+  - 创50
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 50
+  manual_overrides: []
+- cluster_id: C09
+  cluster_name: 科创50
+  include_index_codes:
+  - 000688
+  include_index_keywords:
+  - 科创50
+  include_etf_keywords:
+  - 科创50
+  exclude_keywords:
+  - 科创100
+  - 科创综指
+  - 科创综合
+  - 科创芯片
+  - 科创创业
+  - 科创人工智能
+  - 科创200
+  - 科创板200
+  - 科创板综合
+  - 科创综
+  - 双创
+  - 科创板新一代信息技术
+  - 科创价值
+  classification_priority: 40
+  representative_policy: size_liquidity_completeness
+  notes: 科创板核心宽基。
+  exact_index_codes:
+  - 000688
+  exact_index_names: []
+  index_name_patterns:
+  - 科创50
+  etf_name_patterns:
+  - 科创50
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 科创100
+  - 科创综指
+  - 科创综合
+  - 科创芯片
+  - 科创创业
+  - 科创人工智能
+  - 科创200
+  - 科创板200
+  - 科创板综合
+  - 科创综
+  - 双创
+  - 科创板新一代信息技术
+  - 科创价值
+  priority: 40
+  manual_overrides: []
+- cluster_id: C10
+  cluster_name: 科创100/科创成长
+  include_index_codes:
+  - 000698
+  - 000699
+  - 000682
+  - 000681
+  - 000680
+  - '950333'
+  - '950228'
+  - '000690'
+  - '931643'
+  include_index_keywords:
+  - 科创100
+  - 科创200
+  - 科创板200
+  - 科创板新一代信息技术
+  - 科创技术
+  - 科创价值
+  - 科创板价值
+  - 科创板综合
+  - 科创创业50
+  - 科创成长
+  - 上证科创板成长
+  include_etf_keywords:
+  - 科创100
+  - 科创200
+  - 科200
+  - 科创信息
+  - 科创技术
+  - 科创价值
+  - 科创增
+  - 科综
+  - 科创成长
+  exclude_keywords: []
+  classification_priority: 41
+  representative_policy: size_liquidity_completeness
+  notes: 科创板中盘、综合与成长观察；科创创业类仅按明确跟踪指数代码或指数名称纳入。
+  exact_index_codes:
+  - 000698
+  - 000699
+  - 000682
+  - 000681
+  - 000680
+  - '950333'
+  - '950228'
+  - '000690'
+  - '931643'
+  exact_index_names: []
+  index_name_patterns:
+  - 科创100
+  - 科创200
+  - 科创板200
+  - 科创板新一代信息技术
+  - 科创技术
+  - 科创价值
+  - 科创板价值
+  - 科创板综合
+  - 科创创业50
+  - 科创成长
+  - 上证科创板成长
+  etf_name_patterns:
+  - 科创100
+  - 科创200
+  - 科200
+  - 科创信息
+  - 科创技术
+  - 科创价值
+  - 科创增
+  - 科综
+  - 科创成长
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 41
+  manual_overrides: []
+- cluster_id: C11
+  cluster_name: 红利
+  include_index_codes: []
+  include_index_keywords:
+  - 红利
+  - 股息
+  include_etf_keywords:
+  - 红利
+  - 股息
+  exclude_keywords:
+  - 红利低波
+  - 低波红利
+  - 央企红利
+  classification_priority: 80
+  representative_policy: size_liquidity_completeness
+  notes: 红利策略，不含红利低波。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 红利
+  - 股息
+  etf_name_patterns:
+  - 红利
+  - 股息
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 红利低波
+  - 低波红利
+  - 央企红利
+  priority: 80
+  manual_overrides: []
+- cluster_id: C12
+  cluster_name: 红利低波
+  include_index_codes: []
+  include_index_keywords:
+  - 红利低波
+  - 低波红利
+  - 红利低波动
+  include_etf_keywords:
+  - 红利低波
+  - 低波红利
+  exclude_keywords: []
+  classification_priority: 70
+  representative_policy: size_liquidity_completeness
+  notes: 防御红利策略。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 红利低波
+  - 低波红利
+  - 红利低波动
+  etf_name_patterns:
+  - 红利低波
+  - 低波红利
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 70
+  manual_overrides: []
+- cluster_id: C13
+  cluster_name: 央企/国企改革
+  include_index_codes: []
+  include_index_keywords:
+  - 央企
+  - 国企
+  - 国有企业
+  - 国企改革
+  - 房地产
+  - 基建工程
+  include_etf_keywords:
+  - 央企
+  - 国企
+  - 国企改革
+  - 地产ETF
+  - 房地产
+  - 基建
+  exclude_keywords:
+  - 港股
+  classification_priority: 90
+  representative_policy: size_liquidity_completeness
+  notes: 央国企主题。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 央企
+  - 国企
+  - 国有企业
+  - 国企改革
+  - 房地产
+  - 基建工程
+  etf_name_patterns:
+  - 央企
+  - 国企
+  - 国企改革
+  - 地产ETF
+  - 房地产
+  - 基建
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 港股
+  priority: 90
+  manual_overrides: []
+- cluster_id: C14
+  cluster_name: 券商/证券
+  include_index_codes: []
+  include_index_keywords:
+  - 证券公司
+  - 证券
+  - 券商
+  include_etf_keywords:
+  - 证券
+  - 券商
+  - 证券公司
+  exclude_keywords: []
+  classification_priority: 100
+  representative_policy: size_liquidity_completeness
+  notes: 证券ETF与券商ETF同义合并。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 证券公司
+  - 证券
+  - 券商
+  etf_name_patterns:
+  - 证券
+  - 券商
+  - 证券公司
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 100
+  manual_overrides: []
+- cluster_id: C15
+  cluster_name: 银行
+  include_index_codes: []
+  include_index_keywords:
+  - 银行
+  include_etf_keywords:
+  - 银行
+  exclude_keywords: []
+  classification_priority: 110
+  representative_policy: size_liquidity_completeness
+  notes: 银行主题。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 银行
+  etf_name_patterns:
+  - 银行
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 110
+  manual_overrides: []
+- cluster_id: C16
+  cluster_name: 半导体/芯片
+  include_index_codes:
+  - '980017'
+  - '931865'
+  include_index_keywords:
+  - 半导体
+  - 芯片
+  - 集成电路
+  - 半导体芯片
+  - 国证半导体芯片
+  include_etf_keywords:
+  - 半导体
+  - 芯片
+  - 集成电路
+  - 芯片ETF华夏
+  exclude_keywords: []
+  classification_priority: 120
+  representative_policy: size_liquidity_completeness
+  notes: 芯片ETF与半导体ETF同义合并。
+  exact_index_codes:
+  - '980017'
+  - '931865'
+  exact_index_names: []
+  index_name_patterns:
+  - 半导体
+  - 芯片
+  - 集成电路
+  - 半导体芯片
+  - 国证半导体芯片
+  etf_name_patterns:
+  - 半导体
+  - 芯片
+  - 集成电路
+  - 芯片ETF华夏
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 120
+  manual_overrides: []
+- cluster_id: C17
+  cluster_name: 人工智能
+  include_index_codes: []
+  include_index_keywords:
+  - 人工智能
+  - AI
+  - 智能
+  include_etf_keywords:
+  - 人工智能
+  - AI
+  exclude_keywords:
+  - 机器人
+  - 智能车
+  - 智能汽车
+  classification_priority: 140
+  representative_policy: size_liquidity_completeness
+  notes: AI主题，排除机器人和智能车专门主题。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 人工智能
+  - AI
+  - 智能
+  etf_name_patterns:
+  - 人工智能
+  - AI
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 机器人
+  - 智能车
+  - 智能汽车
+  priority: 140
+  manual_overrides: []
+- cluster_id: C18
+  cluster_name: 数字科技/传媒
+  include_index_codes: []
+  include_index_keywords:
+  - 云计算
+  - 云服务
+  - 大数据
+  - 数据产业
+  - 软件
+  - 传媒
+  - 动漫游戏
+  - 游戏
+  - 科技龙头
+  - 金融科技
+  - 物联网
+  - 工业互联网
+  - 消费电子
+  - 电子50
+  - 计算机
+  - 信创
+  - 信息技术应用创新
+  - 信息技术
+  - 信息安全
+  - 数字经济
+  - 电子龙头
+  - TMT
+  - 科技50
+  - 科技100
+  - 战略新兴
+  - 影视
+  include_etf_keywords:
+  - 云计算
+  - 云
+  - 大数据
+  - 数据
+  - 软件
+  - 传媒
+  - 游戏
+  - 科技ETF
+  - 金融科技
+  - 物联网
+  - 工业互联网
+  - 消费电子
+  - 消电
+  - 电子ETF
+  - 电子龙头
+  - 计算机
+  - 信创
+  - 信息技术
+  - 信息安全
+  - 数字ETF
+  - 数字经济
+  - TMT
+  - 科技50
+  - 科技100
+  - 战略新兴
+  - 影视
+  exclude_keywords:
+  - 红利
+  classification_priority: 150
+  representative_policy: size_liquidity_completeness
+  notes: 云计算、大数据、软件、TMT、传媒与数字经济综合主题。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 云计算
+  - 云服务
+  - 大数据
+  - 数据产业
+  - 软件
+  - 传媒
+  - 动漫游戏
+  - 游戏
+  - 科技龙头
+  - 金融科技
+  - 物联网
+  - 工业互联网
+  - 消费电子
+  - 电子50
+  - 计算机
+  - 信创
+  - 信息技术应用创新
+  - 信息技术
+  - 信息安全
+  - 数字经济
+  - 电子龙头
+  - TMT
+  - 科技50
+  - 科技100
+  - 战略新兴
+  - 影视
+  etf_name_patterns:
+  - 云计算
+  - 云
+  - 大数据
+  - 数据
+  - 软件
+  - 传媒
+  - 游戏
+  - 科技ETF
+  - 金融科技
+  - 物联网
+  - 工业互联网
+  - 消费电子
+  - 消电
+  - 电子ETF
+  - 电子龙头
+  - 计算机
+  - 信创
+  - 信息技术
+  - 信息安全
+  - 数字ETF
+  - 数字经济
+  - TMT
+  - 科技50
+  - 科技100
+  - 战略新兴
+  - 影视
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 红利
+  priority: 150
+  manual_overrides: []
+- cluster_id: C19
+  cluster_name: 通信
+  include_index_codes: []
+  include_index_keywords:
+  - 通信
+  - 5G
+  - 光通信
+  - 卫星互联网
+  - 电信
+  include_etf_keywords:
+  - 通信
+  - 5G
+  - 光通信
+  - 卫星
+  - 电信
+  exclude_keywords: []
+  classification_priority: 160
+  representative_policy: size_liquidity_completeness
+  notes: 通信链。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 通信
+  - 5G
+  - 光通信
+  - 卫星互联网
+  - 电信
+  etf_name_patterns:
+  - 通信
+  - 5G
+  - 光通信
+  - 卫星
+  - 电信
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 160
+  manual_overrides: []
+- cluster_id: C20
+  cluster_name: 机器人
+  include_index_codes: []
+  include_index_keywords:
+  - 机器人
+  - 智能制造
+  - 高端制造
+  - 高端装备
+  - 装备
+  - 工程机械
+  - 机械
+  include_etf_keywords:
+  - 机器人
+  - 智能制造
+  - 高端制造
+  - 高端装备
+  - 装备ETF
+  - 工程机械
+  - 机械ETF
+  exclude_keywords: []
+  classification_priority: 130
+  representative_policy: size_liquidity_completeness
+  notes: 机器人优先于人工智能宽泛关键词。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 机器人
+  - 智能制造
+  - 高端制造
+  - 高端装备
+  - 装备
+  - 工程机械
+  - 机械
+  etf_name_patterns:
+  - 机器人
+  - 智能制造
+  - 高端制造
+  - 高端装备
+  - 装备ETF
+  - 工程机械
+  - 机械ETF
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 130
+  manual_overrides: []
+- cluster_id: C21
+  cluster_name: 消费
+  include_index_codes: []
+  include_index_keywords:
+  - 消费
+  - 食品
+  - 主要消费
+  - 可选消费
+  - 农业
+  - 粮食
+  - 养殖
+  - 畜牧
+  - 农牧
+  - 家电
+  - 养老产业
+  - 民族品牌
+  include_etf_keywords:
+  - 消费
+  - 食品
+  - 农业
+  - 养殖
+  - 粮食
+  - 畜牧
+  - 农牧
+  - 家电
+  - 养老
+  - 国货
+  - 民族品牌
+  exclude_keywords:
+  - 白酒
+  - 酒
+  - 医药
+  - 港股
+  - 消费电子
+  - 电子消费
+  classification_priority: 180
+  representative_policy: size_liquidity_completeness
+  notes: 大消费，不含酒和医药。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 消费
+  - 食品
+  - 主要消费
+  - 可选消费
+  - 农业
+  - 粮食
+  - 养殖
+  - 畜牧
+  - 农牧
+  - 家电
+  - 养老产业
+  - 民族品牌
+  etf_name_patterns:
+  - 消费
+  - 食品
+  - 农业
+  - 养殖
+  - 粮食
+  - 畜牧
+  - 农牧
+  - 家电
+  - 养老
+  - 国货
+  - 民族品牌
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 白酒
+  - 酒
+  - 医药
+  - 港股
+  - 消费电子
+  - 电子消费
+  priority: 180
+  manual_overrides: []
+- cluster_id: C22
+  cluster_name: 酒
+  include_index_codes: []
+  include_index_keywords:
+  - 白酒
+  - 酒
+  include_etf_keywords:
+  - 白酒
+  - 酒ETF
+  - 酒
+  exclude_keywords: []
+  classification_priority: 170
+  representative_policy: size_liquidity_completeness
+  notes: 白酒和酒主题。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 白酒
+  - 酒
+  etf_name_patterns:
+  - 白酒
+  - 酒ETF
+  - 酒
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 170
+  manual_overrides: []
+- cluster_id: C23
+  cluster_name: 医药
+  include_index_codes: []
+  include_index_keywords:
+  - 医药
+  - 医疗
+  - 生物医药
+  - 生物科技
+  - 医疗器械
+  - 医疗设备
+  - 中药
+  - 制药
+  - 疫苗
+  - 生物技术
+  include_etf_keywords:
+  - 医药
+  - 医疗
+  - 生物
+  - 医疗器械
+  - 医疗设备
+  - 中药
+  - 生物医药
+  - 生物科技
+  - 制药
+  - 疫苗
+  - 生物技术
+  exclude_keywords:
+  - 创新药
+  classification_priority: 200
+  representative_policy: size_liquidity_completeness
+  notes: 医药泛主题。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 医药
+  - 医疗
+  - 生物医药
+  - 生物科技
+  - 医疗器械
+  - 医疗设备
+  - 中药
+  - 制药
+  - 疫苗
+  - 生物技术
+  etf_name_patterns:
+  - 医药
+  - 医疗
+  - 生物
+  - 医疗器械
+  - 医疗设备
+  - 中药
+  - 生物医药
+  - 生物科技
+  - 制药
+  - 疫苗
+  - 生物技术
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 创新药
+  priority: 200
+  manual_overrides: []
+- cluster_id: C24
+  cluster_name: 创新药
+  include_index_codes: []
+  include_index_keywords:
+  - 创新药
+  - 创新医药
+  include_etf_keywords:
+  - 创新药
+  exclude_keywords: []
+  classification_priority: 190
+  representative_policy: size_liquidity_completeness
+  notes: 创新药优先于医药。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 创新药
+  - 创新医药
+  etf_name_patterns:
+  - 创新药
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 190
+  manual_overrides: []
+- cluster_id: C25
+  cluster_name: 光伏
+  include_index_codes:
+  - '000995'
+  include_index_keywords:
+  - 光伏
+  - 太阳能
+  include_etf_keywords:
+  - 光伏
+  - 太阳能
+  exclude_keywords:
+  - 电池
+  - 储能
+  - 锂电
+  classification_priority: 210
+  representative_policy: size_liquidity_completeness
+  notes: 光伏产业链。
+  exact_index_codes:
+  - '000995'
+  exact_index_names: []
+  index_name_patterns:
+  - 光伏
+  - 太阳能
+  etf_name_patterns:
+  - 光伏
+  - 太阳能
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 电池
+  - 储能
+  - 锂电
+  priority: 210
+  manual_overrides: []
+- cluster_id: C26
+  cluster_name: 新能源车
+  include_index_codes: []
+  include_index_keywords:
+  - 新能源车
+  - 新能源汽车
+  - 智能汽车
+  - 汽车零部件
+  - 汽车零件
+  include_etf_keywords:
+  - 新能源车
+  - 新能源汽车
+  - 智能车
+  - 汽车ETF
+  - 汽车零部件
+  - 汽车零件
+  exclude_keywords:
+  - 港股汽车
+  classification_priority: 220
+  representative_policy: size_liquidity_completeness
+  notes: 新能源车与智能车。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 新能源车
+  - 新能源汽车
+  - 智能汽车
+  - 汽车零部件
+  - 汽车零件
+  etf_name_patterns:
+  - 新能源车
+  - 新能源汽车
+  - 智能车
+  - 汽车ETF
+  - 汽车零部件
+  - 汽车零件
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 港股汽车
+  priority: 220
+  manual_overrides: []
+- cluster_id: C27
+  cluster_name: 电池/储能
+  include_index_codes: []
+  include_index_keywords:
+  - 电池
+  - 储能
+  - 锂电
+  include_etf_keywords:
+  - 电池
+  - 储能
+  - 锂电
+  exclude_keywords: []
+  classification_priority: 205
+  representative_policy: size_liquidity_completeness
+  notes: 电池ETF与储能ETF同义合并。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 电池
+  - 储能
+  - 锂电
+  etf_name_patterns:
+  - 电池
+  - 储能
+  - 锂电
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 205
+  manual_overrides: []
+- cluster_id: C28
+  cluster_name: 军工
+  include_index_codes: []
+  include_index_keywords:
+  - 军工
+  - 国防
+  - 航天
+  - 航空
+  - 船舶
+  - 航海
+  include_etf_keywords:
+  - 军工
+  - 国防
+  - 航天
+  - 航空
+  - 船舶
+  exclude_keywords: []
+  classification_priority: 230
+  representative_policy: size_liquidity_completeness
+  notes: 军工与国防。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 军工
+  - 国防
+  - 航天
+  - 航空
+  - 船舶
+  - 航海
+  etf_name_patterns:
+  - 军工
+  - 国防
+  - 航天
+  - 航空
+  - 船舶
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 230
+  manual_overrides: []
+- cluster_id: C29
+  cluster_name: 有色
+  include_index_codes: []
+  include_index_keywords:
+  - 有色
+  - 稀有金属
+  - 金属
+  - 铜
+  - 铝
+  - 稀土
+  - 有色金属
+  - 钢铁
+  - 自然资源
+  - 资源
+  include_etf_keywords:
+  - 有色
+  - 稀有金属
+  - 金属
+  - 铜
+  - 铝
+  - 稀土
+  - 有色金属
+  - 钢铁
+  - 资源ETF
+  exclude_keywords:
+  - 黄金
+  - 贵金属
+  classification_priority: 240
+  representative_policy: size_liquidity_completeness
+  notes: 有色金属股票主题，不含黄金商品。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 有色
+  - 稀有金属
+  - 金属
+  - 铜
+  - 铝
+  - 稀土
+  - 有色金属
+  - 钢铁
+  - 自然资源
+  - 资源
+  etf_name_patterns:
+  - 有色
+  - 稀有金属
+  - 金属
+  - 铜
+  - 铝
+  - 稀土
+  - 有色金属
+  - 钢铁
+  - 资源ETF
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 黄金
+  - 贵金属
+  priority: 240
+  manual_overrides: []
+- cluster_id: C30
+  cluster_name: 煤炭
+  include_index_codes: []
+  include_index_keywords:
+  - 煤炭
+  include_etf_keywords:
+  - 煤炭
+  exclude_keywords: []
+  classification_priority: 250
+  representative_policy: size_liquidity_completeness
+  notes: 煤炭周期。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 煤炭
+  etf_name_patterns:
+  - 煤炭
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 250
+  manual_overrides: []
+- cluster_id: C31
+  cluster_name: 化工
+  include_index_codes: []
+  include_index_keywords:
+  - 化工
+  - 化学
+  - 新材料
+  - 材料
+  - 化学制品
+  include_etf_keywords:
+  - 化工
+  - 化学
+  - 新材料
+  - 材料ETF
+  exclude_keywords:
+  - 新能源
+  classification_priority: 260
+  representative_policy: size_liquidity_completeness
+  notes: 化工与材料。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 化工
+  - 化学
+  - 新材料
+  - 材料
+  - 化学制品
+  etf_name_patterns:
+  - 化工
+  - 化学
+  - 新材料
+  - 材料ETF
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 新能源
+  priority: 260
+  manual_overrides: []
+- cluster_id: C32
+  cluster_name: 绿电/公用事业
+  include_index_codes: []
+  include_index_keywords:
+  - 绿色电力
+  - 绿电
+  - 电力公用事业
+  - 公用事业
+  - 电力
+  include_etf_keywords:
+  - 绿色电力
+  - 绿电
+  - 公用事业
+  - 电力ETF
+  exclude_keywords:
+  - 电力设备
+  - 电池
+  - 储能
+  - 光伏
+  - 新能源车
+  - 新能源汽车
+  classification_priority: 212
+  representative_policy: size_liquidity_completeness
+  notes: 绿色电力与公用事业，独立于光伏和新能源车。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 绿色电力
+  - 绿电
+  - 电力公用事业
+  - 公用事业
+  - 电力
+  etf_name_patterns:
+  - 绿色电力
+  - 绿电
+  - 公用事业
+  - 电力ETF
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 电力设备
+  - 电池
+  - 储能
+  - 光伏
+  - 新能源车
+  - 新能源汽车
+  priority: 212
+  manual_overrides: []
+- cluster_id: C33
+  cluster_name: 环保/碳中和
+  include_index_codes: []
+  include_index_keywords:
+  - 环保
+  - 环境治理
+  - 生态
+  - 长江保护
+  - 碳中和
+  include_etf_keywords:
+  - 环保
+  - 环境治理
+  - 生态
+  - 长江保护
+  - 长江ETF
+  - 碳中和
+  exclude_keywords: []
+  classification_priority: 214
+  representative_policy: size_liquidity_completeness
+  notes: 环保、生态治理与碳中和主题。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 环保
+  - 环境治理
+  - 生态
+  - 长江保护
+  - 碳中和
+  etf_name_patterns:
+  - 环保
+  - 环境治理
+  - 生态
+  - 长江保护
+  - 长江ETF
+  - 碳中和
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 214
+  manual_overrides: []
+- cluster_id: C34
+  cluster_name: 旅游
+  include_index_codes: []
+  include_index_keywords:
+  - 旅游
+  - 文旅
+  include_etf_keywords:
+  - 旅游
+  - 文旅
+  exclude_keywords: []
+  classification_priority: 216
+  representative_policy: size_liquidity_completeness
+  notes: 旅游与文旅主题，独立于能源类集群。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 旅游
+  - 文旅
+  etf_name_patterns:
+  - 旅游
+  - 文旅
+  exclude_index_codes: []
+  exclude_name_patterns: []
+  priority: 216
+  manual_overrides: []
+- cluster_id: C35
+  cluster_name: 综合新能源
+  include_index_codes: []
+  include_index_keywords:
+  - 新能源
+  include_etf_keywords:
+  - 新能源
+  exclude_keywords:
+  - 新能源车
+  - 新能源汽车
+  - 新能车
+  - 电池
+  - 储能
+  - 锂电
+  - 光伏
+  - 太阳能
+  - 绿色电力
+  - 绿电
+  - 电力
+  - 环保
+  - 碳中和
+  classification_priority: 225
+  representative_policy: size_liquidity_completeness
+  notes: 无法进一步拆分到光伏、新能源车、电池储能或绿电的综合新能源主题。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 新能源
+  etf_name_patterns:
+  - 新能源
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 新能源车
+  - 新能源汽车
+  - 新能车
+  - 电池
+  - 储能
+  - 锂电
+  - 光伏
+  - 太阳能
+  - 绿色电力
+  - 绿电
+  - 电力
+  - 环保
+  - 碳中和
+  priority: 225
+  manual_overrides: []
+- cluster_id: C36
+  cluster_name: 金融/非银
+  include_index_codes: []
+  include_index_keywords:
+  - 金融
+  - 保险
+  include_etf_keywords:
+  - 金融ETF
+  - 金融
+  - 保险
+  exclude_keywords:
+  - 金融科技
+  - 银行
+  - 证券
+  - 券商
+  classification_priority: 115
+  representative_policy: size_liquidity_completeness
+  notes: 银行和券商之外的综合金融与保险主题。
+  exact_index_codes: []
+  exact_index_names: []
+  index_name_patterns:
+  - 金融
+  - 保险
+  etf_name_patterns:
+  - 金融ETF
+  - 金融
+  - 保险
+  exclude_index_codes: []
+  exclude_name_patterns:
+  - 金融科技
+  - 银行
+  - 证券
+  - 券商
+  priority: 115
+  manual_overrides: []

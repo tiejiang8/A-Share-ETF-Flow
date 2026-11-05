@@ -1,0 +1,39 @@
+supplements:
+  - etf_code: "159915"
+    etf_name: 创业板ETF易方达
+    expanded_name: 易方达创业板交易型开放式指数证券投资基金
+    exchange: SZSE
+    manager: 易方达基金管理有限公司
+    etf_type: etf
+    tracking_index_code: "399006"
+    tracking_index_name: 创业板指数
+    latest_share_10k_from_list: 1069367.0
+    source: anchor_supplement:fund_company_scale
+    source_url: https://www.efunds.com.cn/Mobile/fund/159915.shtml
+    validation_status: anchor_supplement_current_share_only
+
+  - etf_code: "159949"
+    etf_name: 创业板50ETF华安
+    expanded_name: 华安创业板50交易型开放式指数证券投资基金
+    exchange: SZSE
+    manager: 华安基金管理有限公司
+    etf_type: etf
+    tracking_index_code: "399673"
+    tracking_index_name: 创业板50指数
+    latest_share_10k_from_list: 1198400.0
+    source: anchor_supplement:public_scale_crosscheck
+    source_url: https://q.stock.sohu.com/cn/159949/index.shtml
+    validation_status: anchor_supplement_current_share_only
+
+  - etf_code: "159995"
+    etf_name: 芯片ETF华夏
+    expanded_name: 华夏国证半导体芯片交易型开放式指数证券投资基金
+    exchange: SZSE
+    manager: 华夏基金管理有限公司
+    etf_type: etf
+    tracking_index_code: "980017"
+    tracking_index_name: 国证半导体芯片指数
+    latest_share_10k_from_list: 1110500.0
+    source: anchor_supplement:public_share_crosscheck
+    source_url: https://finance.sina.com.cn/money/fund/aiassistant/etfsp/2026-07-02/doc-inifkyvw5886809.shtml
+    validation_status: anchor_supplement_current_share_only

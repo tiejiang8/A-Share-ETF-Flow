@@ -1,0 +1,48 @@
+# Python caches and build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Runtime data and generated reports
+data/
+outputs/
+tmp/
+.tmp/
+_tmp*/
+
+# Local Codex / automation helper state
+.codex/
+.baoyu-skills/
+.agents/
+.workbuddy/
+
+# Credentials, local settings and editor state
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.idea/
+.vscode/
+
+# Ad-hoc archives and exported report copies
+*.zip
+A股ETF资金温度日报*.pdf
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.log

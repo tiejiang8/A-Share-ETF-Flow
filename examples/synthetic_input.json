@@ -1,0 +1,11 @@
+{
+  "synthetic_demo": true,
+  "description": "Fictional ETF records for an offline software example. Not market observations.",
+  "date": "2026-01-05",
+  "etfs": [
+    {"etf_code": "990001", "etf_name": "演示宽基A", "primary_cluster": "C02", "primary_cluster_name": "大盘宽基", "fund_size_100m": 100.0, "estimated_net_subscription_100m": 10.0, "estimated_net_subscription_5d_100m": 20.0, "close": 4.0, "latest_shares": 2500000000, "nav": 4.0, "amount": 1000000000, "share_daily_change": 250000000, "share_daily_change_pct": 0.1111111111},
+    {"etf_code": "990002", "etf_name": "演示科技B", "primary_cluster": "C16", "primary_cluster_name": "半导体/芯片", "fund_size_100m": 50.0, "estimated_net_subscription_100m": -3.0, "estimated_net_subscription_5d_100m": -5.0, "close": 1.0, "latest_shares": 5000000000, "nav": 1.0, "amount": 500000000, "share_daily_change": -300000000, "share_daily_change_pct": -0.0566037736},
+    {"etf_code": "990003", "etf_name": "演示未分类C", "primary_cluster": "", "primary_cluster_name": null, "fund_size_100m": 20.0, "estimated_net_subscription_100m": 0.0, "estimated_net_subscription_5d_100m": 0.0, "close": 2.0, "latest_shares": 1000000000, "nav": 2.0, "amount": 100000000, "share_daily_change": 0.0, "share_daily_change_pct": 0.0},
+    {"etf_code": "990004", "etf_name": "演示缺数D", "primary_cluster": "", "primary_cluster_name": null, "fund_size_100m": 0.08, "estimated_net_subscription_100m": null, "estimated_net_subscription_5d_100m": null, "close": null, "latest_shares": null, "nav": 1.04, "nav_data_date": "2026-01-02", "amount": null, "share_daily_change": null, "share_daily_change_pct": null}
+  ]
+}

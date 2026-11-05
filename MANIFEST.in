@@ -1,0 +1,17 @@
+include README.md README.zh-CN.md CONTRIBUTING.md SECURITY.md CHANGELOG.md
+recursive-include config *.yaml
+recursive-include contracts *.json
+recursive-include docs *.md
+recursive-include examples *.json *.md *.txt
+recursive-include scripts *.py *.ps1
+recursive-include tests *.py
+recursive-include .github *.yml *.yaml *.md
+prune data
+prune outputs
+prune .workbuddy
+prune .agents
+prune .codex
+prune .baoyu-skills
+prune .tmp
+prune tmp
+global-exclude __pycache__ *.py[cod] *.log .env .env.*

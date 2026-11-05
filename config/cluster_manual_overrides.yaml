@@ -1,0 +1,48 @@
+overrides:
+  - etf_code: "159915"
+    primary_cluster: C07
+    reason: 核心锚点；跟踪创业板指，深市列表分页缺口时仍需纳入创业板集群校验。
+    source: config/core_anchors.yaml; CNINFO行情; CSRC-EID净值; 基金公司规模页
+    verified_at: "2026-07-03"
+
+  - etf_code: "159949"
+    primary_cluster: C08
+    reason: 核心锚点；跟踪创业板50，必须区别于创业板普通宽基。
+    source: config/core_anchors.yaml; CNINFO行情; CSRC-EID净值; 基金公司/公开规模页
+    verified_at: "2026-07-03"
+
+  - etf_code: "159995"
+    primary_cluster: C16
+    reason: 半导体/芯片锚点；深市老代码段缺页时作为 C16 锚点补充。
+    source: config/core_anchors.yaml; CNINFO行情; CSRC-EID净值; 基金公司/公开规模页
+    verified_at: "2026-07-03"
+
+  - etf_code: "512070"
+    primary_cluster: C14
+    reason: 跟踪沪深300非银行金融指数，本质为证券保险/券商金融主题，不应因指数名含“沪深300”误归 C02。
+    source: config/cluster_rules.yaml regression
+    verified_at: "2026-07-03"
+
+  - etf_code: "159930"
+    primary_cluster: C30
+    reason: 能源ETF汇添富，跟踪中证能源指数，应纳入煤炭/能源周期观察集群，避免重要未分类影响正式报告覆盖率。
+    source: outputs/audit/unclassified_etf_audit.csv
+    verified_at: "2026-07-03"
+
+  - etf_code: "159966"
+    primary_cluster: C07
+    reason: 创业板价值ETF华夏，创业板风格宽基，应纳入创业板观察集群。
+    source: outputs/audit/unclassified_etf_audit.csv
+    verified_at: "2026-07-03"
+
+  - etf_code: "159991"
+    primary_cluster: C07
+    reason: 创业板大盘ETF招商，创业板风格宽基，应纳入创业板观察集群。
+    source: outputs/audit/unclassified_etf_audit.csv
+    verified_at: "2026-07-03"
+
+  - etf_code: "512190"
+    primary_cluster: C02
+    reason: 跟踪中证浙江凤凰行动50指数，属于区域性大盘宽基；31集群中归入C02，避免用宽泛地域关键词误分类。
+    source: outputs/audit/unclassified_etf_audit.csv
+    verified_at: "2026-07-10"

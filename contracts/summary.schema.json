@@ -1,0 +1,773 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "A-Share-ETF-Flow daily summary v1.0",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "asof": {
+      "type": "string",
+      "format": "date"
+    },
+    "report_status": {
+      "enum": [
+        "正式报告",
+        "预览/数据待补全"
+      ]
+    },
+    "formal_report_allowed": {
+      "type": "boolean"
+    },
+    "formal_blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "universe": {
+          "type": "string"
+        },
+        "etf_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cluster_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "identity_note": {
+          "type": "string"
+        },
+        "synthetic_demo": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "universe",
+        "etf_count",
+        "cluster_count",
+        "identity_note"
+      ],
+      "additionalProperties": false
+    },
+    "method": {
+      "type": "object",
+      "properties": {
+        "net_subscription_formula": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "share_unit": {
+          "type": "string"
+        },
+        "nav_unit": {
+          "type": "string"
+        },
+        "flow_1d_definition": {
+          "type": "string"
+        },
+        "flow_5d_definition": {
+          "type": "string"
+        },
+        "yuan_per_100m": {
+          "const": 100000000
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "net_subscription_formula",
+        "unit",
+        "share_unit",
+        "nav_unit",
+        "flow_1d_definition",
+        "flow_5d_definition",
+        "yuan_per_100m",
+        "caveats"
+      ],
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "quote_coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "share_coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "nav_coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "quote_fresh_coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "share_fresh_coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "nav_fresh_coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "flow_member_coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "flow_size_coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "weighted_share_coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "missing_flow_size_100m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "official_ratio": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "browser_fallback_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "third_party_fallback_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "date_mismatch_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stale_quote_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stale_share_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stale_nav_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_nav_lag_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extreme_flow_trigger_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extreme_flow_unresolved_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unclassified_etf_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "missing_quote_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missing_share_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "missing_nav_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "coverage_note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "quote_coverage",
+        "share_coverage",
+        "nav_coverage",
+        "quote_fresh_coverage",
+        "share_fresh_coverage",
+        "nav_fresh_coverage",
+        "flow_member_coverage",
+        "flow_size_coverage",
+        "weighted_share_coverage",
+        "missing_flow_size_100m",
+        "official_ratio",
+        "browser_fallback_count",
+        "third_party_fallback_count",
+        "date_mismatch_count",
+        "stale_quote_count",
+        "stale_share_count",
+        "stale_nav_count",
+        "max_nav_lag_days",
+        "extreme_flow_trigger_count",
+        "extreme_flow_unresolved_count",
+        "unclassified_etf_count",
+        "missing_quote_codes",
+        "missing_share_codes",
+        "missing_nav_codes",
+        "coverage_note"
+      ],
+      "additionalProperties": false
+    },
+    "data_dates": {
+      "type": "object",
+      "properties": {
+        "report_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "quote_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "quote_date_mismatch_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "quote_date_mismatch_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "share_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "share_date_mismatch_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "share_date_mismatch_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nav_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "nav_date_mismatch_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nav_date_mismatch_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "report_date",
+        "quote_date",
+        "quote_date_mismatch_count",
+        "quote_date_mismatch_codes",
+        "share_date",
+        "share_date_mismatch_count",
+        "share_date_mismatch_codes",
+        "nav_date",
+        "nav_date_mismatch_count",
+        "nav_date_mismatch_codes"
+      ],
+      "additionalProperties": false
+    },
+    "market": {
+      "type": "object",
+      "properties": {
+        "total_size_100m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "flow_1d_100m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "flow_5d_100m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "gross_inflow_100m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "gross_outflow_100m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "turnover_100m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "cluster_scope_flow_1d_100m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unclassified_flow_1d_100m": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "flow_valid_etf_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "flow_missing_etf_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scope_note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "total_size_100m",
+        "flow_1d_100m",
+        "flow_5d_100m",
+        "gross_inflow_100m",
+        "gross_outflow_100m",
+        "turnover_100m",
+        "cluster_scope_flow_1d_100m",
+        "unclassified_flow_1d_100m",
+        "flow_valid_etf_count",
+        "flow_missing_etf_count",
+        "scope_note"
+      ],
+      "additionalProperties": false
+    },
+    "clusters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cluster_id": {
+            "type": "string"
+          },
+          "cluster_name": {
+            "type": "string"
+          },
+          "member_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "total_size_100m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "flow_1d_100m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "flow_5d_100m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "flow_size_coverage": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "one_day_flow_member_coverage": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "cluster_temperature": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "gross_inflow_100m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "gross_outflow_100m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "max_contributor_flow_1d_100m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "top3_contributor_ratio_1d": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "weighted_pct_change": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "temperature_level": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "temperature_direction": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "temperature_phase": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "flow_structure_label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "structure_judgement": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "max_contributor_name_1d": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "cluster_id",
+          "cluster_name",
+          "member_count",
+          "total_size_100m",
+          "flow_1d_100m",
+          "flow_5d_100m",
+          "flow_size_coverage",
+          "one_day_flow_member_coverage",
+          "cluster_temperature",
+          "gross_inflow_100m",
+          "gross_outflow_100m",
+          "max_contributor_flow_1d_100m",
+          "top3_contributor_ratio_1d",
+          "weighted_pct_change",
+          "temperature_level",
+          "temperature_direction",
+          "temperature_phase",
+          "flow_structure_label",
+          "structure_judgement",
+          "max_contributor_name_1d"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "top_inflow_etfs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "properties": {
+          "etf_code": {
+            "type": "string"
+          },
+          "etf_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cluster_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "flow_1d_100m": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "flow_5d_100m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fund_size_100m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "share_daily_change_pct": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "nav": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "pct_change": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "nav_data_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "share_data_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          }
+        },
+        "required": [
+          "etf_code",
+          "etf_name",
+          "cluster_name",
+          "flow_1d_100m",
+          "flow_5d_100m",
+          "fund_size_100m",
+          "share_daily_change_pct",
+          "nav",
+          "pct_change",
+          "nav_data_date",
+          "share_data_date"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "top_outflow_etfs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "properties": {
+          "etf_code": {
+            "type": "string"
+          },
+          "etf_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cluster_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "flow_1d_100m": {
+            "type": "number",
+            "exclusiveMaximum": 0
+          },
+          "flow_5d_100m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fund_size_100m": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "share_daily_change_pct": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "nav": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "pct_change": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "nav_data_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "share_data_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          }
+        },
+        "required": [
+          "etf_code",
+          "etf_name",
+          "cluster_name",
+          "flow_1d_100m",
+          "flow_5d_100m",
+          "fund_size_100m",
+          "share_daily_change_pct",
+          "nav",
+          "pct_change",
+          "nav_data_date",
+          "share_data_date"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "asof",
+    "report_status",
+    "formal_report_allowed",
+    "formal_blockers",
+    "content_hash",
+    "scope",
+    "method",
+    "coverage",
+    "data_dates",
+    "market",
+    "clusters",
+    "top_inflow_etfs",
+    "top_outflow_etfs"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "scope": {
+            "required": [
+              "synthetic_demo"
+            ],
+            "properties": {
+              "synthetic_demo": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "formal_report_allowed": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

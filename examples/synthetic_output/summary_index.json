@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0",
+  "updated_at": "2026-11-05T11:04:44",
+  "entries": [
+    {
+      "asof": "2026-01-05",
+      "report_status": "预览/数据待补全",
+      "formal_report_allowed": false,
+      "flow_1d_100m": 7.0,
+      "flow_5d_100m": 15.0,
+      "total_size_100m": 170.08,
+      "flow_valid_etf_count": 3,
+      "flow_missing_etf_count": 1,
+      "flow_size_coverage": 0.9995296331138287,
+      "quote_coverage": 0.75,
+      "share_coverage": 0.75,
+      "nav_coverage": 1.0,
+      "quote_fresh_coverage": 0.75,
+      "share_fresh_coverage": 0.75,
+      "nav_fresh_coverage": 0.75,
+      "extreme_flow_unresolved_count": 0,
+      "content_hash": "b7108e8dbb139fd0b10d3012d6a8feac6ad7f8acb4d0ef7992050d85ad4b586c"
+    }
+  ]
+}
