@@ -95,6 +95,7 @@ def test_source_export_uses_allowlist_and_preserves_private_files(tmp_path):
     files = {
         'README.md': '# Public project', 'src/etf_temperature/main.py': 'PUBLIC = True',
         'config/temperature.yaml': 'public: true',
+        'scripts/example.ps1': 'Write-Output hello\r\n',
         'data/raw/response.json': 'PRIVATE_RAW', 'outputs/report.md': 'PRIVATE_REPORT',
         '.workbuddy/memory/MEMORY.md': 'PRIVATE_HISTORY', '.baoyu-skills/.env': 'PRIVATE_CREDENTIAL',
         '.tmp/scratch.txt': 'PRIVATE_SCRATCH', 'debug.log': 'PRIVATE_LOG',
@@ -109,8 +110,9 @@ def test_source_export_uses_allowlist_and_preserves_private_files(tmp_path):
     destination = Path(result['directory'])
     manifest = json.loads((destination / 'RELEASE_MANIFEST.json').read_text(encoding='utf-8'))
     included = {item['path'] for item in manifest['files']}
-    assert included == {'README.md', 'src/etf_temperature/main.py', 'config/temperature.yaml'}
-    assert all((source / name).read_text(encoding='utf-8') == content for name, content in files.items())
+    assert included == {'README.md', 'src/etf_temperature/main.py', 'config/temperature.yaml', 'scripts/example.ps1'}
+    assert (destination / 'scripts/example.ps1').read_bytes() == b'Write-Output hello\n'
+    assert all((source / name).read_bytes() == content.encode('utf-8') for name, content in files.items())
     with zipfile.ZipFile(result['archive']) as archive:
         assert all('PRIVATE_' not in archive.read(name).decode('utf-8') for name in archive.namelist())
     with pytest.raises(FileExistsError):

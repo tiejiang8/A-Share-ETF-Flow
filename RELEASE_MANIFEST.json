@@ -1,11 +1,11 @@
 {
   "project": "A-Share-ETF-Flow",
-  "generated_at_utc": "2026-11-05T03:07:19+00:00",
+  "generated_at_utc": "2026-11-05T05:03:47+00:00",
   "files": [
     {
       "path": ".gitattributes",
-      "bytes": 141,
-      "sha256": "2b2627aedaa57a673479b99b0cb43b618ea288f2ea0361c1a4507a5f6f862144"
+      "bytes": 139,
+      "sha256": "5dd40bb803a720011f1ddc042a386ebd5c1ef80cdba64fc0f0c4d9e9e95db600"
     },
     {
       "path": ".github/pull_request_template.md",
@@ -44,13 +44,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 7538,
-      "sha256": "c9275772cfcabf4b2b3d6ce98b1b16519456dc16fa0b567a3582f0bee534d67e"
+      "bytes": 7996,
+      "sha256": "1e713abc6386104dba1cef1126cd6ac569d96363cc0fab0711cecb021de8e92c"
     },
     {
       "path": "README.zh-CN.md",
-      "bytes": 6769,
-      "sha256": "baa0c64fea2c3dca4d5a2df326c69d7eb3952d07a50a071ae5ea71e4d7deee31"
+      "bytes": 7209,
+      "sha256": "8ee82cc2dcf288e7cafa186b8667d6436027aaab4cc8d36543649dad1493d6f5"
     },
     {
       "path": "SECURITY.md",
@@ -129,8 +129,8 @@
     },
     {
       "path": "docs/GITHUB_RELEASE.md",
-      "bytes": 2299,
-      "sha256": "83f6683e9d41240ba3552cc5c2f4c955ed970b13754eaea75ab6ffcae77f4975"
+      "bytes": 2561,
+      "sha256": "f2043a16d7b704f0d3e7d553115c08625c9387fdf5398c4fa140c15c2ae7a73c"
     },
     {
       "path": "docs/OPERATIONS.zh-CN.md",
@@ -145,7 +145,7 @@
     {
       "path": "docs/cluster_methodology.md",
       "bytes": 725,
-      "sha256": "1b7da7b31a2962e442c9dcf1b95f56c64264c109e5b5191645397007a5a41980"
+      "sha256": "3943978a5e26c70fa272b54cd1592cc7ace718e48205cbe4d73552c51f4886e3"
     },
     {
       "path": "docs/data_dictionary.md",
@@ -214,8 +214,8 @@
     },
     {
       "path": "scripts/prepare_github_release.py",
-      "bytes": 3522,
-      "sha256": "1c349a62065d94b1ab73ab9d03c46dba29e3857a6764499a3727bc7e8c135368"
+      "bytes": 3631,
+      "sha256": "4d26d33308ccabd30a923b79289f2cced768ca303cb215f34dbf8e10707f2ce8"
     },
     {
       "path": "scripts/publish_wechat_checked.ps1",
@@ -529,8 +529,8 @@
     },
     {
       "path": "tests/test_public_release.py",
-      "bytes": 5220,
-      "sha256": "16e292395b8064b1f19f65041146aa2ef0cbdd7d0f1f5e0ed2dd1434a621f627"
+      "bytes": 5390,
+      "sha256": "1144b84a2f4331f20c4eabc819448e0e54f455c03f4e4e259a106749e821af93"
     },
     {
       "path": "tests/test_refactor_regressions.py",
@@ -595,6 +595,5 @@
     ".tmp/",
     "tmp/",
     "credentials and logs"
-  ],
-  "text_normalization": "Git source blobs use UTF-8 and LF line endings; file hashes describe the published blobs."
+  ]
 }

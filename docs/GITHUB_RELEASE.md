@@ -4,7 +4,7 @@ Target repository name: **A-Share-ETF-Flow**, alongside `tiejiang8/FP-DCF`.
 
 Suggested description:
 
-> Auditable A-share ETF flow and market-structure reports with official-source data, quality gates and AI-readable summaries.
+> 用官方披露数据追踪 A 股 ETF 资金流向与板块轮动，生成可追溯的日报、周报和 AI 摘要。Track A-share ETF flows and sector rotation with auditable reports and AI-readable summaries.
 
 Suggested topics: `etf`, `a-shares`, `fund-flows`, `market-structure`, `finance`,
 `python`, `llm`.
@@ -21,6 +21,9 @@ python scripts/prepare_github_release.py
 
 The last command creates a new source directory and ZIP under `dist/github/`,
 with `RELEASE_MANIFEST.json` listing included files, sizes and SHA-256 hashes.
+Text files are exported with LF line endings, and checksums describe the exact
+exported bytes. Git attributes retain LF on checkout and archive, including
+PowerShell scripts.
 It never deletes local data, copies `.git`, or overwrites an existing export.
 Use this clean directory for the initial repository upload rather than uploading
 the working directory wholesale.

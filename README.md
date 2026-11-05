@@ -2,8 +2,13 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-Auditable A-share equity ETF flow and market-structure reports for researchers,
-data pipelines and AI agents.
+**Track A-share ETF flows and sector rotation using official disclosures, with automated, auditable daily reports, weekly reports and AI-readable summaries.**
+
+Use it to see which ETFs and sectors receive net creations, whether flows persist
+or reverse, how concentrated they are, and whether share changes confirm price
+moves. Inputs are disclosed quotes, shares and NAVs; outputs are research reports,
+ETF and cluster tables, and structured summaries for AI agents and data pipelines.
+Incomplete real-market data produces an explicitly marked preview with blockers.
 
 The project collects exchange and authoritative fund disclosures, keeps dated
 source evidence, estimates ETF net creation/redemption, and produces daily and

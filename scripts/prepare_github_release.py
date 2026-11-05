@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
-import shutil
 import zipfile
 
 
@@ -35,8 +34,10 @@ def prepare_release(destination: Path, *, root: Path = ROOT) -> dict:
         relative = source.relative_to(root)
         target = destination / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
-        manifest.append({"path": relative.as_posix(), "bytes": source.stat().st_size, "sha256": hashlib.sha256(source.read_bytes()).hexdigest()})
+        # Release files are text: canonical LF bytes survive Git checkout/archive.
+        content = source.read_bytes().replace(b"\r\n", b"\n")
+        target.write_bytes(content)
+        manifest.append({"path": relative.as_posix(), "bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()})
     document = {"project": "A-Share-ETF-Flow", "generated_at_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"), "files": manifest, "excluded": ["data/", "outputs/", ".venv/", ".git/", ".workbuddy/", ".agents/", ".codex/", ".baoyu-skills/", ".tmp/", "tmp/", "credentials and logs"]}
     (destination / "RELEASE_MANIFEST.json").write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     archive = Path(str(destination) + ".zip")
