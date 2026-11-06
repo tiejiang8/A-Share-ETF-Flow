@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from hashlib import sha1
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
+import pytest
 
 from etf_temperature import csv_cache
 from etf_temperature.pipeline import PipelineResult, rebuild_history
@@ -273,6 +277,67 @@ def test_raw_binary_cache_reuses_same_historical_xlsx_url(tmp_path: Path) -> Non
     assert client.get_bytes(url, raw_prefix="szse_share_xlsx") == Response.content
     assert session.calls == 1
     assert len(list(tmp_path.glob("*.bin"))) == 1
+
+
+@pytest.mark.parametrize("extension", ["txt", "bin"])
+def test_raw_response_index_reads_legacy_files_and_keeps_refresh_fallback(tmp_path, extension) -> None:
+    from etf_temperature.official_endpoints import OfficialClient
+
+    url = "https://example.com/source"
+    prefix = "example_source"
+    digest = sha1(url.encode()).hexdigest()[:16]
+
+    def store(stamp, payload):
+        path = tmp_path / f"{stamp}_{prefix}_{digest}.{extension}"
+        path.write_bytes(f"URL: {url}\n\n".encode() + payload if extension == "txt" else payload)
+        return path
+
+    store("20260703_090000_000000", b"older")
+    latest = store("20260703_091000_000000", b"latest")
+    client = OfficialClient(raw_dir=tmp_path, retries=1)
+    worker = OfficialClient(raw_dir=tmp_path, retries=1)
+    get = worker.get_text if extension == "txt" else worker.get_bytes
+
+    def expected(value):
+        return value.decode() if extension == "txt" else value
+
+    def fail_get(*args, **kwargs):
+        raise OSError("source unavailable")
+
+    worker.session = SimpleNamespace(get=fail_get, close=lambda: None)
+    assert get(url, raw_prefix=prefix, cache_ttl_seconds=-1) == expected(b"latest")
+    assert get(url, raw_prefix=prefix, force_refresh=True) == expected(b"latest")
+    latest.unlink()
+    assert get(url, raw_prefix=prefix, cache_ttl_seconds=-1) == expected(b"older")
+    save = client._save_raw if extension == "txt" else client._save_raw_bytes
+    saved = save(url, expected(b"updated"), prefix)
+    assert save(url, expected(b"updated"), prefix) == saved
+    assert get(url, raw_prefix=prefix, cache_ttl_seconds=-1) == expected(b"updated")
+    assert len(list(tmp_path.glob(f"*.{extension}"))) == 2
+
+
+def test_raw_response_index_scans_once_across_parallel_writes(tmp_path, monkeypatch) -> None:
+    from etf_temperature import official_endpoints
+
+    clients = [official_endpoints.OfficialClient(raw_dir=tmp_path) for _ in range(4)]
+    scans = []
+    scandir = official_endpoints.os.scandir
+
+    def track_scans(directory):
+        scans.append(Path(directory))
+        return scandir(directory)
+
+    monkeypatch.setattr(official_endpoints.os, "scandir", track_scans)
+
+    def save(i):
+        url = f"https://example.com/source/{i // 2}"
+        return clients[i % len(clients)]._save_raw(url, "response", "example")
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        paths = list(pool.map(save, range(16)))
+
+    assert len(set(paths)) == 8
+    assert len(scans) == 1
 
 
 def test_szse_quote_history_caps_bulk_pages(monkeypatch) -> None:

@@ -6,7 +6,8 @@ import logging
 from pathlib import Path
 import sys
 
-from .official_endpoints import NORMALIZED_DIR, RAW_DIR
+from ._atomic import FileLockTimeout, exclusive_file_lock
+from .official_endpoints import NORMALIZED_DIR, OUTPUTS_DIR, RAW_DIR
 from .audit import audit_extreme_flows, write_audit_outputs
 from .analysis_backfill import backfill_market_data
 from .pipeline import backfill_nav_history, make_summary, probe_official, rebuild_history, rebuild_universe, run_pipeline, validate_anchors, validate_clusters, validate_run
@@ -44,6 +45,7 @@ def main(argv: list[str] | None = None) -> int:
     run_p.add_argument("--date", default="auto", help="auto or YYYYMMDD/YYYY-MM-DD")
     run_p.add_argument("--refresh", action="store_true", help="force official refresh even when a local snapshot exists")
     run_p.add_argument("--full-refresh", action="store_true", help="ignore source caches and use the full official lookback window")
+    run_p.add_argument("--reuse-formal", action="store_true", help="reuse a formal report without regenerating it")
     run_p.add_argument(
         "--refresh-recent-days",
         type=int,
@@ -125,12 +127,20 @@ def main(argv: list[str] | None = None) -> int:
             parser.error("--full-refresh cannot be used with --refresh-recent-days")
         refresh_recent_days = args.refresh_recent_days if args.refresh_recent_days is not None else 2
         refresh_requested = bool(args.refresh or args.full_refresh or args.refresh_recent_days is not None)
-        result = run_pipeline(
-            args.date,
-            refresh=refresh_requested,
-            refresh_recent_days=refresh_recent_days,
-            full_refresh=args.full_refresh,
-        )
+        try:
+            with exclusive_file_lock(OUTPUTS_DIR / ".daily_run.lock", timeout=0):
+                result = run_pipeline(
+                    args.date,
+                    refresh=refresh_requested,
+                    refresh_recent_days=refresh_recent_days,
+                    full_refresh=args.full_refresh,
+                    reuse_formal=args.reuse_formal or args.date.lower() == "auto",
+                )
+        except FileLockTimeout as exc:
+            if exc.path.name != ".daily_run.lock":
+                raise
+            _print_json({"status": "already_running", "message": "同一工作区的日报任务正在运行。"})
+            return 75
         _print_json(
             {
                 "report_date": result.report_date,

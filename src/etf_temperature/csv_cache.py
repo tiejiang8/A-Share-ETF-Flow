@@ -7,6 +7,7 @@ import pandas as pd
 
 from ._atomic import atomic_replace
 from .official_endpoints import DATA_DIR, normalize_date
+from .quote_freshness import quote_cache_rank
 
 
 CACHE_DIR = DATA_DIR / "cache"
@@ -98,7 +99,8 @@ def upsert_timeseries_cache(
 ) -> pd.DataFrame:
     """Upsert a source cache keyed by date + ETF code.
 
-    Lower source_priority wins. For equal priority, the newest retrieved_at wins.
+    Quote usability precedes source priority. Otherwise lower source_priority
+    wins, followed by the incoming batch and the latest retrieval timestamp.
     The CSV is written atomically so an interrupted rebuild cannot corrupt it.
     """
 
@@ -124,16 +126,24 @@ def upsert_timeseries_cache(
         raise ValueError(f"cache {kind} missing key columns: {missing_keys}")
 
     merged["source_priority"] = pd.to_numeric(merged.get("source_priority", 999), errors="coerce").fillna(999)
-    retrieved = pd.to_datetime(merged.get("retrieved_at"), errors="coerce")
-    merged["_retrieved_sort"] = retrieved.fillna(pd.Timestamp("1970-01-01"))
+    retrieved = pd.to_datetime(
+        merged.get("retrieved_at", pd.Series(None, index=merged.index)),
+        format="mixed", errors="coerce", utc=True,
+    )
+    merged["_retrieved_sort"] = retrieved.fillna(pd.Timestamp("1970-01-01", tz="UTC"))
+    if kind == "quotes":
+        merged["_quote_rank"] = quote_cache_rank(merged)
+        keys_and_quality = keys + ["_quote_rank"]
+    else:
+        keys_and_quality = keys
 
     merged = (
         merged.sort_values(
-            keys + ["source_priority", "_cache_fresh", "_retrieved_sort"],
-            ascending=[True] * len(keys) + [True, False, False],
+            keys_and_quality + ["source_priority", "_cache_fresh", "_retrieved_sort"],
+            ascending=[True] * len(keys_and_quality) + [True, False, False],
         )
         .drop_duplicates(keys, keep="first")
-        .drop(columns=["_cache_fresh", "_retrieved_sort"], errors="ignore")
+        .drop(columns=["_cache_fresh", "_retrieved_sort", "_quote_rank"], errors="ignore")
         .sort_values(keys)
         .reset_index(drop=True)
     )

@@ -10,8 +10,10 @@ import uuid
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any, Iterable
+from threading import Lock
+from typing import Any, Callable, Iterable
 from urllib.parse import parse_qs, urlparse
+from weakref import WeakValueDictionary
 
 import pandas as pd
 import requests
@@ -260,6 +262,92 @@ def read_dataframe(path: Path) -> pd.DataFrame:
     return pd.read_parquet(path)
 
 
+_RAW_RESPONSE_NAME = re.compile(r"\d{8}_\d{6}_\d{6}_(.*_[0-9a-f]{16}\.(?:txt|bin))")
+
+
+def _raw_response_key(url: str, prefix: str, extension: str) -> str:
+    safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", prefix).strip("_")[:80]
+    digest = hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]
+    return f"{safe}_{digest}.{extension}"
+
+
+class _RawResponseIndex:
+    """Index the latest audited response per request across worker clients."""
+
+    def __init__(self, directory: Path) -> None:
+        self.directory = directory
+        self._lock = Lock()
+        self._mtime_ns: int | None = None
+        self._names: dict[str, str] = {}
+
+    def _latest_path(self, key: str) -> Path | None:
+        # A changed directory stamp also picks up files added or removed by another process.
+        mtime_ns = self.directory.stat().st_mtime_ns
+        if self._mtime_ns != mtime_ns:
+            names: dict[str, str] = {}
+            with os.scandir(self.directory) as entries:
+                for entry in entries:
+                    match = _RAW_RESPONSE_NAME.fullmatch(entry.name)
+                    if match:
+                        cache_key = os.path.normcase(match[1])
+                        if entry.name > names.get(cache_key, ""):
+                            names[cache_key] = entry.name
+            self._names = names
+            self._mtime_ns = mtime_ns
+        name = self._names.get(os.path.normcase(key))
+        return self.directory / name if name else None
+
+    def latest_path(self, key: str) -> Path | None:
+        with self._lock:
+            return self._latest_path(key)
+
+    def save(
+        self,
+        key: str,
+        payload: str | bytes,
+        read_payload: Callable[[Path], str | bytes],
+        write_payload: Callable[[Path], int],
+        *,
+        cache_not_before: float | None = None,
+    ) -> Path:
+        with self._lock:
+            previous = self._latest_path(key)
+            if previous:
+                try:
+                    if (
+                        (cache_not_before is None or previous.stat().st_mtime >= cache_not_before)
+                        and read_payload(previous) == payload
+                    ):
+                        return previous
+                except (OSError, UnicodeError):
+                    pass
+            path = self.directory / f"{datetime.now():%Y%m%d_%H%M%S_%f}_{key}"
+            tmp = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")
+            try:
+                write_payload(tmp)
+                atomic_replace(tmp, path)
+            finally:
+                tmp.unlink(missing_ok=True)
+            if previous is None or path.name > previous.name:
+                self._names[os.path.normcase(key)] = path.name
+            self._mtime_ns = self.directory.stat().st_mtime_ns
+            return path
+
+
+_RAW_RESPONSE_INDEXES: WeakValueDictionary[Path, _RawResponseIndex] = WeakValueDictionary()
+_RAW_RESPONSE_INDEXES_LOCK = Lock()
+
+
+def _raw_response_index(directory: Path) -> _RawResponseIndex:
+    directory = directory.resolve()
+    with _RAW_RESPONSE_INDEXES_LOCK:
+        index = _RAW_RESPONSE_INDEXES.get(directory)
+        if index is None:
+            index = _RawResponseIndex(directory)
+            _RAW_RESPONSE_INDEXES[directory] = index
+        return index
+
+
 @dataclass
 class OfficialClient:
     raw_dir: Path = RAW_DIR
@@ -271,6 +359,7 @@ class OfficialClient:
     def __post_init__(self) -> None:
         ensure_dirs()
         self.raw_dir.mkdir(parents=True, exist_ok=True)
+        self._raw_index = _raw_response_index(self.raw_dir)
         if not hasattr(self, "browser_fallback_urls"):
             self.browser_fallback_urls: list[str] = []
         self.session = requests.Session()
@@ -320,25 +409,28 @@ class OfficialClient:
         raw_prefix: str = "request",
         force_refresh: bool = False,
         cache_ttl_seconds: int | None = None,
+        cache_not_before: float | None = None,
     ) -> str:
         headers = {"Referer": referer} if referer else None
         last_error: Exception | None = None
-        safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", raw_prefix).strip("_")[:80]
-        digest = hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]
-        cached = sorted(self.raw_dir.glob(f"*_{safe}_{digest}.txt"))
+        key = _raw_response_key(url, raw_prefix, "txt")
+        cached = self._raw_index.latest_path(key)
         ttl = self._raw_cache_ttl(url) if cache_ttl_seconds is None else int(cache_ttl_seconds)
         if cached and not force_refresh:
-            newest = cached[-1]
-            age_seconds = max(time.time() - newest.stat().st_mtime, 0)
-            if ttl < 0 or age_seconds <= ttl:
-                return self._read_raw_payload(newest)
+            try:
+                captured = cached.stat().st_mtime
+                age_seconds = max(time.time() - captured, 0)
+                if (cache_not_before is None or captured >= cache_not_before) and (ttl < 0 or age_seconds <= ttl):
+                    return self._read_raw_payload(cached)
+            except FileNotFoundError:
+                pass
 
         for attempt in range(1, self.retries + 1):
             try:
                 response = self.session.get(url, headers=headers, timeout=self.timeout)
                 response.raise_for_status()
                 text = response.text
-                self._save_raw(url, text, raw_prefix)
+                self._save_raw(url, text, raw_prefix, cache_not_before=cache_not_before)
                 return text
             except Exception as exc:  # pragma: no cover - retry branch
                 last_error = exc
@@ -348,11 +440,16 @@ class OfficialClient:
                     self.__post_init__()
                 if attempt < self.retries:
                     time.sleep(self.sleep_seconds * attempt)
+        cached = self._raw_index.latest_path(key)
         if cached:
-            return self._read_raw_payload(cached[-1])
+            try:
+                if cache_not_before is None or cached.stat().st_mtime >= cache_not_before:
+                    return self._read_raw_payload(cached)
+            except FileNotFoundError:
+                pass
         try:
             text = self._get_text_with_playwright(url, referer=referer)
-            self._save_raw(url, text, f"{raw_prefix}_playwright")
+            self._save_raw(url, text, f"{raw_prefix}_playwright", cache_not_before=cache_not_before)
             self.browser_fallback_urls.append(url)
             return text
         except Exception:
@@ -407,8 +504,16 @@ class OfficialClient:
                 context.close()
                 browser.close()
 
-    def get_json(self, url: str, *, referer: str | None = None, raw_prefix: str = "request") -> Any:
-        return parse_json_or_jsonp(self.get_text(url, referer=referer, raw_prefix=raw_prefix))
+    def get_json(
+        self,
+        url: str,
+        *,
+        referer: str | None = None,
+        raw_prefix: str = "request",
+        cache_not_before: float | None = None,
+    ) -> Any:
+        options = {} if cache_not_before is None else {"cache_not_before": cache_not_before}
+        return parse_json_or_jsonp(self.get_text(url, referer=referer, raw_prefix=raw_prefix, **options))
 
     def get_bytes(
         self,
@@ -428,15 +533,16 @@ class OfficialClient:
 
         headers = {"Referer": referer} if referer else None
         last_error: Exception | None = None
-        safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", raw_prefix).strip("_")[:80]
-        digest = hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]
-        cached = sorted(self.raw_dir.glob(f"*_{safe}_{digest}.bin"))
+        key = _raw_response_key(url, raw_prefix, "bin")
+        cached = self._raw_index.latest_path(key)
         ttl = self._raw_cache_ttl(url) if cache_ttl_seconds is None else int(cache_ttl_seconds)
         if cached and not force_refresh:
-            newest = cached[-1]
-            age_seconds = max(time.time() - newest.stat().st_mtime, 0)
-            if ttl < 0 or age_seconds <= ttl:
-                return newest.read_bytes()
+            try:
+                age_seconds = max(time.time() - cached.stat().st_mtime, 0)
+                if ttl < 0 or age_seconds <= ttl:
+                    return cached.read_bytes()
+            except FileNotFoundError:
+                pass
 
         for attempt in range(1, self.retries + 1):
             try:
@@ -455,39 +561,34 @@ class OfficialClient:
                     self.__post_init__()
                 if attempt < self.retries:
                     time.sleep(self.sleep_seconds * attempt)
+        cached = self._raw_index.latest_path(key)
         if cached:
-            return cached[-1].read_bytes()
+            try:
+                return cached.read_bytes()
+            except FileNotFoundError:
+                pass
         raise RuntimeError(f"GET binary failed after {self.retries} attempts: {url}") from last_error
 
-    def _save_raw(self, url: str, text: str, prefix: str) -> Path:
+    def _save_raw(
+        self, url: str, text: str, prefix: str, *, cache_not_before: float | None = None,
+    ) -> Path:
         """Save one auditable raw response without duplicating identical payloads."""
 
-        digest = hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]
-        safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", prefix).strip("_")[:80]
-        cached = sorted(self.raw_dir.glob(f"*_{safe}_{digest}.txt"))
-        if cached:
-            try:
-                if self._read_raw_payload(cached[-1]) == text:
-                    return cached[-1]
-            except Exception:
-                pass
-        path = self.raw_dir / f"{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}_{safe}_{digest}.txt"
-        path.write_text(f"URL: {url}\n\n{text}", encoding="utf-8")
-        return path
+        return self._raw_index.save(
+            _raw_response_key(url, prefix, "txt"),
+            text,
+            self._read_raw_payload,
+            lambda path: path.write_text(f"URL: {url}\n\n{text}", encoding="utf-8"),
+            cache_not_before=cache_not_before,
+        )
 
     def _save_raw_bytes(self, url: str, payload: bytes, prefix: str) -> Path:
-        digest = hashlib.sha1(url.encode("utf-8")).hexdigest()[:16]
-        safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", prefix).strip("_")[:80]
-        cached = sorted(self.raw_dir.glob(f"*_{safe}_{digest}.bin"))
-        if cached:
-            try:
-                if cached[-1].read_bytes() == payload:
-                    return cached[-1]
-            except Exception:
-                pass
-        path = self.raw_dir / f"{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}_{safe}_{digest}.bin"
-        path.write_bytes(payload)
-        return path
+        return self._raw_index.save(
+            _raw_response_key(url, prefix, "bin"),
+            payload,
+            Path.read_bytes,
+            lambda path: path.write_bytes(payload),
+        )
 
 
 def endpoint_markdown() -> str:
@@ -515,10 +616,11 @@ def endpoint_markdown() -> str:
     return "\n".join(lines) + "\n"
 
 
-def write_probe_outputs(extra: dict[str, Any] | None = None) -> None:
+def write_probe_outputs(extra: dict[str, Any] | None = None, *, update_reference: bool = True) -> None:
     ensure_dirs()
     md = endpoint_markdown()
-    (DOCS_DIR / "official_endpoints.md").write_text(md, encoding="utf-8")
+    if update_reference:
+        (DOCS_DIR / "official_endpoints.md").write_text(md, encoding="utf-8")
     (OUTPUTS_DIR / "source_probe.md").write_text(md, encoding="utf-8")
     payload = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),

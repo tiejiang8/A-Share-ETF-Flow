@@ -6,6 +6,7 @@ import pandas as pd
 from .corporate_actions import apply_corporate_action_adjustments
 from .flow_structure import add_flow_speed_columns
 from .official_endpoints import normalize_date, safe_div
+from .quote_freshness import PRECLOSE_QUOTE_STATUS, unsettled_quote_mask
 
 
 def _target_slice(df: pd.DataFrame, target_date: str) -> pd.DataFrame:
@@ -99,15 +100,21 @@ def compute_quote_features(quotes: pd.DataFrame, target_date: str) -> pd.DataFra
         return pd.DataFrame(columns=columns)
     quotes = quotes.dropna(subset=["date"]).copy()
     quotes["date"] = quotes["date"].map(normalize_date)
-    quotes = quotes.sort_values(["etf_code", "date"])
-    records = []
     target = normalize_date(target_date) or "9999-99-99"
+    unsettled = quotes["date"].eq(target) & unsettled_quote_mask(quotes)
+    unsettled_codes = set(quotes.loc[unsettled, "etf_code"])
+    quotes = quotes.loc[~unsettled].sort_values(["etf_code", "date"])
+    records = []
     for code, group in quotes.groupby("etf_code"):
         group = group[group["date"].le(target)].tail(30)
         current = group[group["date"].eq(target)]
         if current.empty:
             continue
         cur = current.iloc[-1]
+        if pd.notna(cur.get("close")):
+            unsettled_codes.discard(code)
+        elif code in unsettled_codes:
+            continue
         history_before_current = group[group["date"].lt(target)]
         close = cur.get("close")
         raw_closes = pd.to_numeric(group["close"], errors="coerce")
@@ -150,6 +157,10 @@ def compute_quote_features(quotes: pd.DataFrame, target_date: str) -> pd.DataFra
                 "quote_validation_status": cur.get("validation_status", "ok"),
             }
         )
+    records.extend(
+        {"etf_code": code, "date": target, "quote_validation_status": PRECLOSE_QUOTE_STATUS}
+        for code in sorted(unsettled_codes)
+    )
     return pd.DataFrame(records, columns=columns)
 
 

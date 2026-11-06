@@ -9,6 +9,7 @@ from urllib.parse import quote
 import pandas as pd
 
 from .official_endpoints import OfficialClient, normalize_date, to_float, ymd
+from .quote_freshness import MARKET_TIMEZONE, quote_close_timestamp
 
 
 SSE_REFERER_LIST = "https://www.sse.com.cn/assortment/fund/etf/list/"
@@ -150,7 +151,9 @@ def _topup_latest_share_date(
     )
 
 
-def _fetch_dayk_one(client: OfficialClient, code: str, points: int = 20) -> list[dict]:
+def _fetch_dayk_one(
+    client: OfficialClient, code: str, points: int = 20, *, cache_not_before: float | None = None,
+) -> list[dict]:
     # SSE treats end=-1 as the current/latest bar and returns one fewer row than
     # abs(begin). Request one extra position so `points=2` includes T and T-1.
     api_points = max(int(points), 1) + 1
@@ -159,8 +162,9 @@ def _fetch_dayk_one(client: OfficialClient, code: str, points: int = 20) -> list
         "select=date,open,high,low,close,volume,amount"
         f"&begin=-{api_points}&end=-1"
     )
-    data = client.get_json(url, referer=SSE_REFERER_FUND, raw_prefix=f"sse_dayk_{code}")
-    now = datetime.now().isoformat(timespec="seconds")
+    options = {} if cache_not_before is None else {"cache_not_before": cache_not_before}
+    data = client.get_json(url, referer=SSE_REFERER_FUND, raw_prefix=f"sse_dayk_{code}", **options)
+    now = datetime.now(MARKET_TIMEZONE).replace(tzinfo=None).isoformat(timespec="seconds")
     rows = []
     for item in data.get("kline") or []:
         if len(item) < 7:
@@ -187,13 +191,17 @@ def _fetch_dayk_one(client: OfficialClient, code: str, points: int = 20) -> list
     return rows
 
 
-def fetch_quote_history(client: OfficialClient, codes: list[str], points: int = 20, max_workers: int = 10) -> pd.DataFrame:
+def fetch_quote_history(
+    client: OfficialClient, codes: list[str], points: int = 20, max_workers: int = 10, *,
+    settled_for: str | None = None,
+) -> pd.DataFrame:
     records: list[dict] = []
     code_list = [str(code).zfill(6) for code in codes if str(code).strip()]
     LOGGER.info("sse quotes start codes=%s points=%s workers=%s", len(code_list), points, max_workers)
 
     worker_timeout = min(int(getattr(client, "timeout", 12)), 8)
     worker_retries = min(int(getattr(client, "retries", 3)), 1)
+    cache_options = {"cache_not_before": quote_close_timestamp(settled_for)} if settled_for else {}
 
     def fetch_one(code: str) -> list[dict]:
         client_kwargs = {
@@ -206,7 +214,7 @@ def fetch_quote_history(client: OfficialClient, codes: list[str], points: int = 
             client_kwargs["raw_dir"] = client.raw_dir
         worker_client = OfficialClient(**client_kwargs)
         try:
-            return _fetch_dayk_one(worker_client, code, points)
+            return _fetch_dayk_one(worker_client, code, points, **cache_options)
         finally:
             try:
                 worker_client.session.close()

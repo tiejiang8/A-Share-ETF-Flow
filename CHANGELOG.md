@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Daily collection shares a raw-response index across workers and logs elapsed
+  time for each major stage.
+- Daily quote caches flag pre-close bars for targeted recollection. Unrepaired
+  pre-close data blocks a formal report, while confirmed zero-volume bars are
+  eligible.
+- Large CSRC NAV gaps use bounded same-date bulk queries with a per-fund
+  fallback for the remaining codes.
+- Scheduled daily runs reuse complete formal reports and use an operating-system
+  lock to prevent concurrent daily writers in the same workspace.
+
 ## 0.1.0 — GitHub preparation (2026-11-05)
 
 - Public project name: **A-Share-ETF-Flow**; existing package and CLI names remain

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from ._atomic import atomic_write_text
 from .config import get_report_config, load_temperature_config
 from .flow_structure import flow_structure_config
 from .temperature import temperature_band_definition
@@ -1636,7 +1637,7 @@ def _write_technical_appendix(
     lines.append(f"以下榜单均基于全市场扫描结果，各榜只展示Top{appendix_top_n}；正文仅保留综合精选异动，附录承担检索。")
     lines.append("")
     _append_single_etf_rankings(lines, etf_daily, top_n=appendix_top_n, heading_level=3)
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    atomic_write_text(path, "\n".join(lines) + "\n")
 
 
 def generate_report(
@@ -1739,7 +1740,7 @@ def generate_report(
             lines.append(f"![{title} K线图]({_markdown_path(path, output_path.parent)})")
             lines.append("")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    atomic_write_text(output_path, "\n".join(lines) + "\n")
     _write_technical_appendix(
         _appendix_path(output_path, report_date),
         report_date,

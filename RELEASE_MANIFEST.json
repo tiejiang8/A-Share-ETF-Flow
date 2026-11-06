@@ -1,6 +1,6 @@
 {
   "project": "A-Share-ETF-Flow",
-  "generated_at_utc": "2026-11-05T11:15:42+00:00",
+  "generated_at_utc": "2026-11-06T06:46:00+00:00",
   "files": [
     {
       "path": ".gitattributes",
@@ -24,8 +24,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "bytes": 1485,
-      "sha256": "cd5fe096c68ebea209c629715d79badc3d70efc28193f3a1db707b880c4e818e"
+      "bytes": 2034,
+      "sha256": "8a11fca095f3e7145e56190d0b940c16def1040e73bf922af4a877adcf781e56"
     },
     {
       "path": "CHANGELOG_W28_NAV_BACKFILL.md",
@@ -139,8 +139,8 @@
     },
     {
       "path": "docs/OPERATIONS.zh-CN.md",
-      "bytes": 32233,
-      "sha256": "aaf51f19a86debee2df4952a745194d928e3f467fd39914d038c4ded429b3b55"
+      "bytes": 33038,
+      "sha256": "d7d4feb4c6467acf795414ffd93082ba541ae5551dcca8a24d758a51a58e29da"
     },
     {
       "path": "docs/authoritative_fallback_sources.md",
@@ -229,8 +229,8 @@
     },
     {
       "path": "scripts/run_daily.ps1",
-      "bytes": 145,
-      "sha256": "8bf91137f1ff2633ec47b745388a1119d923e4fcf188acf603418b90e6e355ba"
+      "bytes": 328,
+      "sha256": "5d538d966902794943dded97e3babac3ad9f2ec360ea9d3f0298ec34548155a1"
     },
     {
       "path": "scripts/run_offline_example.py",
@@ -254,8 +254,8 @@
     },
     {
       "path": "src/etf_temperature/_atomic.py",
-      "bytes": 1538,
-      "sha256": "424bc9c1471ec47c711332752b7d6794298f1bfe39aa8505556d06486c69bec8"
+      "bytes": 3469,
+      "sha256": "8bf0289ae7bcb5ff95e28c43b81f7b4e13be3c40932ba0ac620ef860e6ea8652"
     },
     {
       "path": "src/etf_temperature/aggregation.py",
@@ -299,13 +299,13 @@
     },
     {
       "path": "src/etf_temperature/cli.py",
-      "bytes": 8542,
-      "sha256": "a6f8acc11e248f8ae281f7c6848f907fc24e427af0c0966e6594675317f7d006"
+      "bytes": 9204,
+      "sha256": "1d8f85c96bc6125a842e0124c86c8292438ccbbdf06ace1953cae094ab877b5f"
     },
     {
       "path": "src/etf_temperature/cninfo_nsdk.py",
-      "bytes": 8391,
-      "sha256": "307fc6a2944bac28a2a0233b1600c32709df7b7d100489827c1a1b79b485298c"
+      "bytes": 8472,
+      "sha256": "dfff1c9ad76caa0de8d01576830d8cafbd03ecb2881b45dbbe75fd91f8627178"
     },
     {
       "path": "src/etf_temperature/config.py",
@@ -319,13 +319,13 @@
     },
     {
       "path": "src/etf_temperature/csrc_eid.py",
-      "bytes": 13148,
-      "sha256": "42a2c22a1acd82d824d5826454fc42d90a55f9fc119c181e7b0e551be71e7217"
+      "bytes": 14476,
+      "sha256": "659577acd489c88b99b70abf0b1cc0cf5b0fe76e8948d3b4b88827b176520a0a"
     },
     {
       "path": "src/etf_temperature/csv_cache.py",
-      "bytes": 6882,
-      "sha256": "379d668226d84f6e5e3e77ac2e83524648695246a9604eef96935a0fc4c08bf8"
+      "bytes": 7310,
+      "sha256": "97478dd9a8d732e6d497431fcb508bb38483ca85088d36c142ca96b4f528cc46"
     },
     {
       "path": "src/etf_temperature/fallback.py",
@@ -354,8 +354,8 @@
     },
     {
       "path": "src/etf_temperature/indicators.py",
-      "bytes": 15431,
-      "sha256": "38eaf795fcb0cca0997d649108c71bfdd05efcd61ed04fad24336e458475c511"
+      "bytes": 15957,
+      "sha256": "a254f9a47bde089fee9dc1524941ab1e9656f97408277da757f687d163ea250e"
     },
     {
       "path": "src/etf_temperature/narrative.py",
@@ -364,18 +364,23 @@
     },
     {
       "path": "src/etf_temperature/official_endpoints.py",
-      "bytes": 21373,
-      "sha256": "47525ac884023b7643ed2f1217bf9958845f4bb9a8acd67d09f2d49d7c32dc9d"
+      "bytes": 24921,
+      "sha256": "9f5343219011cdbc78dbea6d5c3b9cd1216cda8dee659cbc6403c8d4742ce4f2"
     },
     {
       "path": "src/etf_temperature/pipeline.py",
-      "bytes": 71258,
-      "sha256": "320d71b90f33dd300a1c7753a02eba2ce92e156dc86a692f9ab7b4219f91c302"
+      "bytes": 75490,
+      "sha256": "87e04ea98443c81b6f961b371f6365ff9ff92a06983452b70dbcdaeb46f92585"
+    },
+    {
+      "path": "src/etf_temperature/quote_freshness.py",
+      "bytes": 1739,
+      "sha256": "1820d1574db4e4d092dcda0710f43f2c631ea82f944aea3474b07404f0fbd496"
     },
     {
       "path": "src/etf_temperature/report.py",
-      "bytes": 86575,
-      "sha256": "66ca377613a1291431644894228d995e0baa0b5fb74bc215beee4a5469e904c8"
+      "bytes": 86594,
+      "sha256": "3e5402a8da841a6f253c2dfa4ebeb8808467673f42c6a917ba39e4d44d46d927"
     },
     {
       "path": "src/etf_temperature/representative.py",
@@ -389,18 +394,18 @@
     },
     {
       "path": "src/etf_temperature/sse_official.py",
-      "bytes": 12098,
-      "sha256": "7bcec213946039b434cd685449e6d57d10b2ae0a12ae89aa561ac93b7e2f83fb"
+      "bytes": 12514,
+      "sha256": "7e7f9f57b7356b3cdf264b2ebfb4fd9f5f2bbaa0ad2639c691218a7b62f20224"
     },
     {
       "path": "src/etf_temperature/summary.py",
-      "bytes": 36571,
-      "sha256": "223851458c5beacf34efdeaa43c406838624a82510e80e91cd94760e7287613d"
+      "bytes": 35136,
+      "sha256": "1f319bd4adec6925e4d55b2a18f759f8d66d3b64882e27f30dc133a1f8bcd1d5"
     },
     {
       "path": "src/etf_temperature/szse_official.py",
-      "bytes": 40515,
-      "sha256": "4a5f6c083978f94ef74811cc678b8131e2c2a0fb2814ce0e8bf26b88d7fec866"
+      "bytes": 41438,
+      "sha256": "462d3bcd2285d8ca4c80bce1211e0b3f1e1481434cd5d3444a68fc6b83c4753f"
     },
     {
       "path": "src/etf_temperature/temperature.py",
@@ -414,8 +419,8 @@
     },
     {
       "path": "src/etf_temperature/validation.py",
-      "bytes": 11480,
-      "sha256": "456ac2ce333e88519cc5d2b87f3cdd7d314ffc0bd7f44c3d5a76caf5ebd128f4"
+      "bytes": 11887,
+      "sha256": "f7308996f960f1b7585375c46797a91236115a7fc30980264e0805042a7e6c5d"
     },
     {
       "path": "src/etf_temperature/weekly.py",
@@ -474,8 +479,13 @@
     },
     {
       "path": "tests/test_csv_cache_and_rebuild.py",
-      "bytes": 12932,
-      "sha256": "4f35b23b41928ebae482f76a4dc129f00b1c743c844ae69af31618a338f4077e"
+      "bytes": 15529,
+      "sha256": "2df868f672cbf40ac3b62bb91b55054c4ebb30893c3702c21ce2d3122486a157"
+    },
+    {
+      "path": "tests/test_daily_scheduling.py",
+      "bytes": 4307,
+      "sha256": "d8da4f44174806e95d89ada8309777019cddf1deafd35d1e1f7673264157b44f"
     },
     {
       "path": "tests/test_extreme_flow_reconciliation.py",
@@ -529,13 +539,18 @@
     },
     {
       "path": "tests/test_nav_backfill.py",
-      "bytes": 6153,
-      "sha256": "598df57f9bf414b23a5627b86dbba7019153c3667bae8abfddcc429584e118b8"
+      "bytes": 8042,
+      "sha256": "bf21f85632d3250a22da177939906f1e095edaff1bd5c3b51b95b1236ad35318"
     },
     {
       "path": "tests/test_public_release.py",
       "bytes": 5462,
       "sha256": "820ca33896fbc8b2dbc44aead27256d089330bb4b2ed30cb212ba543586181c3"
+    },
+    {
+      "path": "tests/test_quote_freshness.py",
+      "bytes": 4012,
+      "sha256": "83e2f7c330ad0d43851b3fbb47460e8d7ea0a40df169509aa99fec6b6dd110f0"
     },
     {
       "path": "tests/test_refactor_regressions.py",

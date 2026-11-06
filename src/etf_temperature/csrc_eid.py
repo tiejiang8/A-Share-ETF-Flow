@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from datetime import datetime, timedelta
 from urllib.parse import urlencode
@@ -16,6 +17,9 @@ CSRC_EID_NAV_PAGE = f"{CSRC_EID_BASE}/fund/subpage/public_net_value_subpage.html
 CSRC_EID_NAV_SEARCH = f"{CSRC_EID_BASE}/fund/disclose/publicDailyReportSearchData.json"
 CSRC_EID_NAV_MORE = f"{CSRC_EID_BASE}/fund/disclose/getPublicFundJZInfoMore.do"
 LAST_WARNINGS: list[str] = []
+LOGGER = logging.getLogger(__name__)
+DAILY_NAV_BULK_MIN_CODES = 100
+DAILY_NAV_BULK_MAX_PAGES = 5
 
 
 def _warm_up(client: OfficialClient) -> str | None:
@@ -142,6 +146,54 @@ def _date_range(start_date: str, end_date: str) -> list[str]:
     return result
 
 
+def _fetch_nav_bulk_for_date(
+    client: OfficialClient,
+    expected: set[str],
+    valuation_date: str,
+    *,
+    page_size: int,
+    sleep_seconds: float,
+    fund_name_filter: str,
+    max_pages: int | None = None,
+) -> tuple[dict[str, dict], bool]:
+    found: dict[str, dict] = {}
+    display_start = 0
+    previous_signature: tuple[str, ...] | None = None
+    pages = 0
+    while max_pages is None or pages < max_pages:
+        try:
+            options = {"fund_name": fund_name_filter} if fund_name_filter else {}
+            data = _fetch_nav_page(
+                client, valuation_date, display_start=display_start, display_length=page_size, **options,
+            )
+        except Exception as exc:
+            LAST_WARNINGS.append(f"CSRC EID 净值 {valuation_date} 批量页 {display_start} 失败: {exc}")
+            return found, True
+
+        pages += 1
+        rows = data.get("aaData") if isinstance(data, dict) else None
+        if not isinstance(data, dict) or (rows is not None and not isinstance(rows, list)):
+            LAST_WARNINGS.append(f"CSRC EID 净值 {valuation_date} 批量页 {display_start} 格式无效。")
+            return found, True
+        rows = [row for row in (rows or []) if isinstance(row, dict)]
+        signature = tuple(str(row.get("idStr") or row.get("code") or "") for row in rows[:5])
+        if display_start > 0 and rows and signature == previous_signature:
+            LAST_WARNINGS.append(f"CSRC EID 净值 {valuation_date} 分页未前进，停止批量分页。")
+            return found, True
+        previous_signature = signature
+        for row in rows:
+            record = _nav_record(row, valuation_date)
+            if record and record["etf_code"] in expected:
+                found[record["etf_code"]] = record
+
+        total = to_float(data.get("iTotalDisplayRecords") or data.get("iTotalRecords")) or len(rows)
+        display_start += len(rows)
+        if not rows or len(found) >= len(expected) or display_start >= total:
+            break
+        time.sleep(sleep_seconds)
+    return found, False
+
+
 def fetch_nav_history(
     client: OfficialClient,
     codes: list[str],
@@ -188,49 +240,10 @@ def fetch_nav_history(
         if latest_date and valuation_date > latest_date:
             continue
 
-        found: dict[str, dict] = {}
-        display_start = 0
-        previous_signature: tuple[str, ...] | None = None
-        bulk_failed = False
-
-        while True:
-            try:
-                page_kwargs = {
-                    "display_start": display_start,
-                    "display_length": page_size,
-                }
-                if fund_name_filter:
-                    page_kwargs["fund_name"] = fund_name_filter
-                data = _fetch_nav_page(client, valuation_date, **page_kwargs)
-            except Exception as exc:
-                LAST_WARNINGS.append(
-                    f"CSRC EID 历史净值 {valuation_date} 批量页 {display_start} 失败: {exc}"
-                )
-                bulk_failed = True
-                break
-
-            rows = data.get("aaData") or []
-            signature = tuple(str(row.get("idStr") or row.get("code") or "") for row in rows[:5])
-            if display_start > 0 and rows and signature == previous_signature:
-                LAST_WARNINGS.append(
-                    f"CSRC EID 历史净值 {valuation_date} 分页未前进，停止批量分页。"
-                )
-                bulk_failed = True
-                break
-            previous_signature = signature
-
-            for row in rows:
-                record = _nav_record(row, valuation_date)
-                if record and record["etf_code"] in expected:
-                    found[record["etf_code"]] = record
-
-            total = int(data.get("iTotalDisplayRecords") or data.get("iTotalRecords") or len(rows))
-            if not rows or len(found) >= len(expected):
-                break
-            display_start += len(rows)
-            if display_start >= total:
-                break
-            time.sleep(sleep_seconds)
+        found, bulk_failed = _fetch_nav_bulk_for_date(
+            client, expected, valuation_date, page_size=page_size,
+            sleep_seconds=sleep_seconds, fund_name_filter=fund_name_filter,
+        )
 
         missing = sorted(expected - set(found))
         if missing and fallback_per_code:
@@ -321,6 +334,8 @@ def fetch_nav_latest(
     report_date: str | None = None,
     sleep_seconds: float = 0.03,
     max_consecutive_failures: int = 8,
+    *,
+    prefer_bulk: bool = False,
 ) -> pd.DataFrame:
     """Fetch official NAV rows from CSRC EID for specific fund codes.
 
@@ -336,21 +351,31 @@ def fetch_nav_latest(
     except Exception as exc:
         LAST_WARNINGS.append(f"CSRC EID 净值入口初始化失败: {exc}")
         return pd.DataFrame()
-    valuation_date = normalize_date(report_date) or latest_date
+    requested_date = normalize_date(report_date)
+    valuation_date = requested_date or latest_date
     if latest_date and valuation_date and valuation_date > latest_date:
         valuation_date = latest_date
     if not valuation_date:
         LAST_WARNINGS.append("CSRC EID 未返回可用净值日期。")
         return pd.DataFrame()
 
-    records: list[dict] = []
+    normalized_codes = list(dict.fromkeys(str(code).strip().zfill(6) for code in codes))
+    found: dict[str, dict] = {}
+    if prefer_bulk and len(normalized_codes) >= DAILY_NAV_BULK_MIN_CODES and valuation_date == requested_date:
+        started = time.perf_counter()
+        found, _ = _fetch_nav_bulk_for_date(
+            client, set(normalized_codes), valuation_date, page_size=2000, sleep_seconds=0.05,
+            fund_name_filter="ETF", max_pages=DAILY_NAV_BULK_MAX_PAGES,
+        )
+        LOGGER.info(
+            "CSRC NAV bulk date=%s matched=%s residual=%s elapsed_seconds=%.2f",
+            valuation_date, len(found), len(normalized_codes) - len(found), time.perf_counter() - started,
+        )
+    records = list(found.values())
     failures = 0
-    seen: set[str] = set()
-    for code in codes:
-        normalized_code = str(code).strip().zfill(6)
-        if normalized_code in seen:
+    for normalized_code in normalized_codes:
+        if normalized_code in found:
             continue
-        seen.add(normalized_code)
         try:
             record = _fetch_nav_one(client, normalized_code, valuation_date)
             if record:

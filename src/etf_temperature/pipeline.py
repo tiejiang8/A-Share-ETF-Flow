@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+import json
 import logging
 from pathlib import Path
+from time import perf_counter
 
 import pandas as pd
 
@@ -47,6 +49,7 @@ from .official_endpoints import (
     write_dataframe,
     write_probe_outputs,
 )
+from .quote_freshness import quote_cache_rank, unsettled_quote_mask
 from .report import generate_report
 from .representative import choose_representatives
 from .snapshot import SnapshotStore, build_daily_snapshot, write_snapshot_json
@@ -147,7 +150,62 @@ def should_refresh_report_date(
         return True, f"已指定 --refresh，将刷新最近 {max(int(recent_days), 1)} 个交易日的官方数据。"
     if not _local_snapshot_available(target):
         return True, f"本地缓存缺少 {target} 的完整日报快照，需要刷新官方数据。"
+    quotes = read_dataframe(NORMALIZED_DIR / "etf_daily_quotes_history.parquet")
+    current = quotes.loc[quotes["date"].eq(target)] if "date" in quotes else quotes.head(0)
+    unsettled = current.loc[unsettled_quote_mask(current)]
+    if not unsettled.empty:
+        universe = read_dataframe(NORMALIZED_DIR / "etf_universe.parquet")
+        active = _a_share_universe_as_of(universe, target, quotes)
+        if not active.empty and unsettled["etf_code"].astype(str).isin(active["etf_code"].astype(str)).any():
+            return True, f"{target} 存在收盘前采集的行情，需要复采后重算日报。"
     return False, f"本地已有 {target} 完整快照；默认跳过官方采集，仅重渲染报告。"
+
+
+def _reuse_formal_daily_report(report_date: str) -> PipelineResult | None:
+    output_dir = OUTPUTS_DIR / report_date
+    report_path = output_dir / f"A股ETF资金温度日报_{report_date}.md"
+    appendix_path = output_dir / f"A股ETF资金温度日报_技术附录_{report_date}.md"
+    chart_dir = output_dir / "charts"
+    snapshot_path = output_dir / "daily_snapshot.json"
+    render_outputs = (report_path, appendix_path, chart_dir / "index.html")
+    required = (*render_outputs, output_dir / "validation.md", output_dir / "daily_etf.parquet",
+                output_dir / "daily_cluster.parquet", output_dir / "summary.json", snapshot_path)
+    if not all(path.is_file() for path in required):
+        return None
+    try:
+        # The snapshot is saved before rendering. An interrupted rerun may
+        # leave the previous run's render outputs at the same paths.
+        snapshot_time = snapshot_path.stat().st_mtime_ns
+        if any(path.stat().st_mtime_ns < snapshot_time for path in render_outputs):
+            return None
+        snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+        summary = json.loads((output_dir / "summary.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(snapshot, dict) or snapshot.get("date") != report_date:
+        return None
+    if (
+        not isinstance(summary, dict)
+        or summary.get("asof") != report_date
+        or summary.get("formal_report_allowed") is not True
+        or summary.get("formal_blockers")
+    ):
+        return None
+    metrics = snapshot.get("validation")
+    if not isinstance(metrics, dict) or metrics.get("formal_report_allowed") is not True or metrics.get("formal_blockers"):
+        return None
+    return PipelineResult(
+        report_date=report_date,
+        report_path=report_path,
+        chart_dir=chart_dir,
+        metrics=metrics,
+        summary=snapshot.get("market", {}),
+        representatives=pd.DataFrame(),
+        cluster_daily=pd.DataFrame(snapshot.get("cluster_daily", [])),
+        unresolved_issues=[],
+        used_cache=True,
+        cache_reason=f"{report_date} 的正式日报已生成，直接复用。",
+    )
 
 
 def _cached_rows_for_date(path: Path, report_date: str, label: str) -> pd.DataFrame:
@@ -190,6 +248,7 @@ def _merge_cached_timeseries(
     key_cols: list[str],
     *,
     history_days: int = 90,
+    quote_data: bool = False,
 ) -> pd.DataFrame:
     cached = _cached_rows_until_date(cache_path, report_date)
     if not cached.empty and "date" in cached:
@@ -214,10 +273,14 @@ def _merge_cached_timeseries(
         merged["source_priority"] = 999
     sort_cols = key_cols + ["source_priority", "_fresh_order"]
     ascending = [True] * len(key_cols) + [True, False]
+    if quote_data:
+        merged["_quote_rank"] = quote_cache_rank(merged)
+        sort_cols.insert(len(key_cols), "_quote_rank")
+        ascending.insert(len(key_cols), True)
     merged = (
         merged.sort_values(sort_cols, ascending=ascending)
         .drop_duplicates(key_cols, keep="first")
-        .drop(columns=["_fresh_order"], errors="ignore")
+        .drop(columns=["_fresh_order", "_quote_rank"], errors="ignore")
     )
     return merged
 
@@ -571,7 +634,7 @@ def _target_quote_codes(quotes: pd.DataFrame, report_date: str) -> set[str]:
         return set()
     target = normalize_date(report_date)
     current = quotes[quotes["date"].map(normalize_date).eq(target) & quotes["close"].notna()]
-    return set(current["etf_code"].astype(str))
+    return set(current.loc[~unsettled_quote_mask(current), "etf_code"].astype(str))
 
 
 def _a_share_universe_as_of(
@@ -610,10 +673,37 @@ def _a_share_universe_as_of(
 def _dedupe_quotes(quotes: pd.DataFrame) -> pd.DataFrame:
     if quotes.empty:
         return quotes
-    return quotes.sort_values(["etf_code", "date", "source_priority"]).drop_duplicates(
-        ["etf_code", "date"],
-        keep="first",
+    return (
+        quotes.assign(_quote_rank=quote_cache_rank(quotes))
+        .sort_values(["etf_code", "date", "_quote_rank", "source_priority"])
+        .drop_duplicates(["etf_code", "date"], keep="first")
+        .drop(columns="_quote_rank")
     )
+
+
+def _quote_refresh_gaps(
+    quotes: pd.DataFrame, expected_by_date: dict[str, list[str]], report_date: str,
+) -> tuple[list[str], list[str]]:
+    settled_keys: set[tuple[str, str]] = set()
+    unsettled_keys: set[tuple[str, str]] = set()
+    if not quotes.empty and {"etf_code", "date"}.issubset(quotes.columns):
+        key_columns = quotes[["etf_code", "date"]].assign(
+            etf_code=quotes["etf_code"].astype(str).str.zfill(6),
+        )
+        ranks = quote_cache_rank(quotes)
+        settled_keys = set(key_columns.loc[ranks.eq(0)].itertuples(index=False, name=None))
+        unsettled_keys = set(key_columns.loc[ranks.eq(1)].itertuples(index=False, name=None))
+    missing_codes: set[str] = set()
+    date_status = []
+    for day, expected in expected_by_date.items():
+        missing = [code for code in expected if (code, day) not in settled_keys]
+        coverage = 1.0 if not expected else 1 - len(missing) / len(expected)
+        date_status.append(f"{day}={coverage:.2%}({len(expected) - len(missing)}/{len(expected)})")
+        missing_codes.update(
+            code for code in missing
+            if day == report_date or coverage < 0.98 or (code, day) in unsettled_keys
+        )
+    return sorted(missing_codes), date_status
 
 
 def _apply_flow_audit_status(etf_daily: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -884,7 +974,9 @@ def run_pipeline(
     refresh_recent_days: int = 2,
     full_refresh: bool = False,
     market_data_cache_only: bool = False,
+    reuse_formal: bool = False,
 ) -> PipelineResult:
+    run_started = perf_counter()
     ensure_dirs()
     LOGGER.info(
         "daily run start date=%s refresh=%s refresh_recent_days=%s full_refresh=%s market_data_cache_only=%s",
@@ -894,31 +986,33 @@ def run_pipeline(
         full_refresh,
         market_data_cache_only,
     )
-    auto_report_date = str(report_date).lower() == "auto"
-    if not auto_report_date:
-        normalized_report_date = normalize_date(report_date) or report_date
-        should_refresh, cache_reason = should_refresh_report_date(
-            normalized_report_date,
-            force=refresh,
-            recent_days=refresh_recent_days,
-        )
-        if not should_refresh:
-            LOGGER.info("daily cache hit date=%s reason=%s", normalized_report_date, cache_reason)
-            return render_report_from_cache(normalized_report_date, cache_reason=cache_reason)
-
-    LOGGER.info("daily official path probing sources")
-    write_probe_outputs()
-    client = client or OfficialClient()
-    LOGGER.info("daily load or rebuild universe")
-    universe, membership = load_or_rebuild_universe(client)
-    if auto_report_date:
+    if str(report_date).lower() == "auto":
+        client = client or OfficialClient()
         LOGGER.info("daily discover report date")
         report_date = discover_report_date(client)
     report_date = normalize_date(report_date) or report_date
-    if auto_report_date and not refresh and _local_snapshot_available(report_date):
-        cache_reason = f"auto 识别到 {report_date}，本地已有完整快照；默认跳过官方采集，仅重渲染报告。"
-        LOGGER.info("daily auto cache hit date=%s", report_date)
-        return render_report_from_cache(report_date, cache_reason=cache_reason)
+    should_refresh, cache_reason = should_refresh_report_date(
+        report_date, force=refresh, recent_days=refresh_recent_days,
+    )
+    if not should_refresh and reuse_formal:
+        existing = _reuse_formal_daily_report(report_date)
+        if existing is not None:
+            LOGGER.info("daily formal report reused date=%s elapsed_seconds=%.2f", report_date, perf_counter() - run_started)
+            return existing
+        should_refresh = True
+        cache_reason = "已有快照尚未通过正式交付校验，需要复跑。"
+    if not should_refresh:
+        LOGGER.info("daily cache hit date=%s reason=%s", report_date, cache_reason)
+        result = render_report_from_cache(report_date, cache_reason=cache_reason)
+        LOGGER.info("daily cache render finished date=%s elapsed_seconds=%.2f", report_date, perf_counter() - run_started)
+        return result
+
+    LOGGER.info("daily refresh date=%s reason=%s", report_date, cache_reason)
+    LOGGER.info("daily official path probing sources")
+    write_probe_outputs(update_reference=False)
+    client = client or OfficialClient()
+    LOGGER.info("daily load or rebuild universe")
+    universe, membership = load_or_rebuild_universe(client)
     LOGGER.info("daily ensure anchor reference data date=%s fetch_missing=%s", report_date, not market_data_cache_only)
     ensure_anchor_reference_data(report_date, client, fetch_missing=not market_data_cache_only)
     output_dir = output_date_dir(report_date)
@@ -953,6 +1047,8 @@ def run_pipeline(
     szse_codes = set(a_share.loc[a_share["exchange"].eq("SZSE"), "etf_code"].astype(str).tolist())
     all_codes = a_share["etf_code"].astype(str).tolist()
 
+    stage_started = perf_counter()
+    LOGGER.info("daily setup ready elapsed_seconds=%.2f", stage_started - run_started)
     if not market_data_cache_only:
         bootstrap_cache("shares", read_dataframe(NORMALIZED_DIR / "etf_share.parquet"))
     share_status_dates = [report_date] if market_data_cache_only else date_candidates
@@ -1008,8 +1104,9 @@ def run_pipeline(
     shares = shares[shares["date"].le(report_date)]
     upsert_timeseries_cache("shares", shares)
     write_dataframe(shares, NORMALIZED_DIR / "etf_share.parquet")
-    LOGGER.info("daily shares ready rows=%s", len(shares))
+    LOGGER.info("daily shares ready rows=%s elapsed_seconds=%.2f", len(shares), perf_counter() - stage_started)
 
+    stage_started = perf_counter()
     if not market_data_cache_only:
         bootstrap_cache("quotes", read_dataframe(NORMALIZED_DIR / "etf_daily_quotes_history.parquet"))
     if market_data_cache_only:
@@ -1027,39 +1124,20 @@ def run_pipeline(
             end_date=report_date,
             codes=all_codes,
         )
-        expected_date_set = {normalize_date(date_text) or date_text for date_text in date_candidates}
-        if cached_quote_window.empty or not {"etf_code", "date"}.issubset(cached_quote_window.columns):
-            existing_quote_keys: set[tuple[str, str]] = set()
-        else:
-            existing_quote_keys = set(
-                cached_quote_window.assign(
-                    etf_code=cached_quote_window["etf_code"].astype(str).str.zfill(6),
-                    date=cached_quote_window["date"].map(normalize_date),
-                ).set_index(["etf_code", "date"]).index
-            )
         listing_by_code = {
             str(row.etf_code).zfill(6): normalize_date(getattr(row, "listing_date", None))
             for row in a_share[["etf_code", "listing_date"]].itertuples(index=False)
         } if "listing_date" in a_share.columns else {}
-        missing_quote_code_set: set[str] = set()
-        quote_cache_date_status: list[str] = []
-        target_report_date = normalize_date(report_date) or report_date
-        for date_text in sorted(expected_date_set):
-            expected_for_date = [
-                str(code).zfill(6)
-                for code in all_codes
-                if not listing_by_code.get(str(code).zfill(6)) or listing_by_code[str(code).zfill(6)] <= date_text
+        expected_by_date = {
+            day: [
+                code for code in all_codes
+                if not listing_by_code.get(code) or listing_by_code[code] <= day
             ]
-            missing_for_date = [
-                code for code in expected_for_date if (code, date_text) not in existing_quote_keys
-            ]
-            coverage = 1.0 if not expected_for_date else 1 - (len(missing_for_date) / len(expected_for_date))
-            quote_cache_date_status.append(
-                f"{date_text}={coverage:.2%}({len(expected_for_date) - len(missing_for_date)}/{len(expected_for_date)})"
-            )
-            if date_text == target_report_date or coverage < 0.98:
-                missing_quote_code_set.update(missing_for_date)
-        missing_quote_codes = sorted(missing_quote_code_set)
+            for day in sorted(set(date_candidates))
+        }
+        missing_quote_codes, quote_cache_date_status = _quote_refresh_gaps(
+            cached_quote_window, expected_by_date, report_date,
+        )
         LOGGER.info(
             "daily quotes incremental missing_codes=%s cached_rows=%s date_status=%s",
             len(missing_quote_codes),
@@ -1079,30 +1157,9 @@ def run_pipeline(
                 LOGGER.info("daily quotes recovered SZSE raw cache rows=%s", len(raw_szse_quotes))
                 cached_quote_window = pd.concat([cached_quote_window, raw_szse_quotes], ignore_index=True, sort=False)
                 upsert_timeseries_cache("quotes", raw_szse_quotes)
-                existing_quote_keys = set(
-                    cached_quote_window.assign(
-                        etf_code=cached_quote_window["etf_code"].astype(str).str.zfill(6),
-                        date=cached_quote_window["date"].map(normalize_date),
-                    ).set_index(["etf_code", "date"]).index
+                missing_quote_codes, quote_cache_date_status = _quote_refresh_gaps(
+                    cached_quote_window, expected_by_date, report_date,
                 )
-                missing_quote_code_set = set()
-                quote_cache_date_status = []
-                for date_text in sorted(expected_date_set):
-                    expected_for_date = [
-                        str(code).zfill(6)
-                        for code in all_codes
-                        if not listing_by_code.get(str(code).zfill(6)) or listing_by_code[str(code).zfill(6)] <= date_text
-                    ]
-                    missing_for_date = [
-                        code for code in expected_for_date if (code, date_text) not in existing_quote_keys
-                    ]
-                    coverage = 1.0 if not expected_for_date else 1 - (len(missing_for_date) / len(expected_for_date))
-                    quote_cache_date_status.append(
-                        f"{date_text}={coverage:.2%}({len(expected_for_date) - len(missing_for_date)}/{len(expected_for_date)})"
-                    )
-                    if date_text == target_report_date or coverage < 0.98:
-                        missing_quote_code_set.update(missing_for_date)
-                missing_quote_codes = sorted(missing_quote_code_set)
                 missing_sse_codes = [code for code in missing_quote_codes if code in set(sse_codes)]
                 missing_szse_codes = set(missing_quote_codes) & set(szse_codes)
                 LOGGER.info(
@@ -1113,7 +1170,9 @@ def run_pipeline(
                 )
             if missing_sse_codes:
                 LOGGER.info("daily quotes fetch SSE missing codes=%s points=%s", len(missing_sse_codes), sse_quote_points)
-                sse_quotes = sse_official.fetch_quote_history(client, missing_sse_codes, points=sse_quote_points)
+                sse_quotes = sse_official.fetch_quote_history(
+                    client, missing_sse_codes, points=sse_quote_points, settled_for=report_date,
+                )
             else:
                 LOGGER.info("daily quotes no missing SSE codes; skip SSE official quote fetch")
                 sse_quotes = pd.DataFrame()
@@ -1140,35 +1199,40 @@ def run_pipeline(
             else:
                 try:
                     LOGGER.info("daily quotes fetch SZSE missing codes=%s window=%s..%s", len(missing_szse_codes), start_date, report_date)
-                    szse_quotes = szse_official.fetch_quote_history(client, start_date, report_date, codes=missing_szse_codes)
+                    szse_quotes = szse_official.fetch_quote_history(
+                        client, start_date, report_date, codes=missing_szse_codes, settled_for=report_date,
+                    )
                 except Exception as exc:
                     szse_official.LAST_WARNINGS.append(f"SZSE 行情接口整体失败: {exc}")
                     szse_quotes = pd.DataFrame()
             if not szse_quotes.empty:
                 szse_quotes = szse_quotes[szse_quotes["etf_code"].isin(missing_szse_codes)]
             fresh_quotes = pd.concat([cached_quote_window, sse_quotes, szse_quotes], ignore_index=True, sort=False)
-            upsert_timeseries_cache("quotes", fresh_quotes)
         else:
             LOGGER.info("daily quotes cache window ready; skip official quotes fetch")
             fresh_quotes = cached_quote_window
     else:
         LOGGER.info("daily quotes fetch SSE codes=%s points=%s", len(sse_codes), sse_quote_points)
-        sse_quotes = sse_official.fetch_quote_history(client, sse_codes, points=sse_quote_points)
+        sse_quotes = sse_official.fetch_quote_history(
+            client, sse_codes, points=sse_quote_points, settled_for=report_date,
+        )
         try:
             LOGGER.info("daily quotes fetch SZSE codes=%s window=%s..%s", len(szse_codes), start_date, report_date)
-            szse_quotes = szse_official.fetch_quote_history(client, start_date, report_date, codes=szse_codes)
+            szse_quotes = szse_official.fetch_quote_history(
+                client, start_date, report_date, codes=szse_codes, settled_for=report_date,
+            )
         except Exception as exc:
             szse_official.LAST_WARNINGS.append(f"SZSE 行情接口整体失败: {exc}")
             szse_quotes = pd.DataFrame()
         if not szse_quotes.empty:
             szse_quotes = szse_quotes[szse_quotes["etf_code"].isin(szse_codes)]
         fresh_quotes = pd.concat([sse_quotes, szse_quotes], ignore_index=True, sort=False)
-        upsert_timeseries_cache("quotes", fresh_quotes)
     quotes = _merge_cached_timeseries(
         fresh_quotes,
         NORMALIZED_DIR / "etf_daily_quotes_history.parquet",
         report_date,
         ["etf_code", "date"],
+        quote_data=True,
     )
     available_quote_codes = _target_quote_codes(quotes, report_date)
     missing_quote_rows = a_share.loc[
@@ -1201,8 +1265,14 @@ def run_pipeline(
             quotes = _dedupe_quotes(quotes)
     upsert_timeseries_cache("quotes", quotes)
     write_dataframe(quotes, NORMALIZED_DIR / "etf_daily_quotes_history.parquet")
-    LOGGER.info("daily quotes ready rows=%s target_available=%s", len(quotes), len(_target_quote_codes(quotes, report_date)))
+    LOGGER.info(
+        "daily quotes ready rows=%s target_available=%s elapsed_seconds=%.2f",
+        len(quotes),
+        len(_target_quote_codes(quotes, report_date)),
+        perf_counter() - stage_started,
+    )
 
+    stage_started = perf_counter()
     if not market_data_cache_only:
         bootstrap_cache("nav", read_dataframe(NORMALIZED_DIR / "etf_nav.parquet"))
     cached_nav = select_timeseries_cache("nav", end_date=report_date, codes=a_share["etf_code"].astype(str))
@@ -1223,11 +1293,25 @@ def run_pipeline(
             len(stale_sse_codes),
             len(stale_szse_codes),
         )
+        fetch_started = perf_counter()
         sse_nav = sse_official.fetch_nav_latest(client, stale_sse_codes) if stale_sse_codes else pd.DataFrame()
+        LOGGER.info(
+            "daily SSE nav ready requested=%s rows=%s elapsed_seconds=%.2f",
+            len(stale_sse_codes),
+            len(sse_nav),
+            perf_counter() - fetch_started,
+        )
+        fetch_started = perf_counter()
         if stale_szse_codes:
             szse_nav = szse_official.fetch_nav_latest(client, stale_szse_codes)
         else:
             szse_nav = pd.DataFrame()
+        LOGGER.info(
+            "daily SZSE nav ready requested=%s rows=%s elapsed_seconds=%.2f",
+            len(stale_szse_codes),
+            len(szse_nav),
+            perf_counter() - fetch_started,
+        )
         nav = pd.concat([cached_nav, sse_nav, szse_nav], ignore_index=True, sort=False)
     nav = _normalize_frame_date_column(nav)
     if "etf_code" not in nav:
@@ -1244,14 +1328,23 @@ def run_pipeline(
     if missing_nav_codes and market_data_cache_only:
         LOGGER.info("daily nav cache-only missing_codes=%s; skip official CSRC nav fallback", len(missing_nav_codes))
     elif missing_nav_codes:
-        csrc_nav = csrc_eid.fetch_nav_latest(client, missing_nav_codes, report_date)
+        fetch_started = perf_counter()
+        LOGGER.info("daily CSRC nav fallback requested=%s", len(missing_nav_codes))
+        csrc_nav = csrc_eid.fetch_nav_latest(client, missing_nav_codes, report_date, prefer_bulk=True)
+        LOGGER.info("daily CSRC nav fallback ready rows=%s elapsed_seconds=%.2f", len(csrc_nav), perf_counter() - fetch_started)
         if not csrc_nav.empty:
             nav = pd.concat([nav, csrc_nav], ignore_index=True, sort=False)
     nav_cache = upsert_timeseries_cache("nav", nav)
     write_dataframe(nav_cache, NORMALIZED_DIR / "etf_nav.parquet")
     nav = select_timeseries_cache("nav", end_date=report_date, codes=a_share["etf_code"].astype(str))
-    LOGGER.info("daily nav ready rows=%s target_slice_rows=%s", len(nav_cache), len(nav))
+    LOGGER.info(
+        "daily nav ready rows=%s target_slice_rows=%s elapsed_seconds=%.2f",
+        len(nav_cache),
+        len(nav),
+        perf_counter() - stage_started,
+    )
 
+    stage_started = perf_counter()
     if not market_data_cache_only:
         try:
             aum_summary = fund_company_official.backfill_official_aum(
@@ -1273,7 +1366,9 @@ def run_pipeline(
     aum = select_timeseries_cache("aum", end_date=report_date, codes=all_codes)
     write_dataframe(shares, NORMALIZED_DIR / "etf_share.parquet")
     write_dataframe(aum, NORMALIZED_DIR / "etf_aum.parquet")
+    LOGGER.info("daily AUM and normalized cache ready elapsed_seconds=%.2f", perf_counter() - stage_started)
 
+    stage_started = perf_counter()
     LOGGER.info("daily build indicators date=%s", report_date)
     etf_daily = build_etf_daily(a_share, active_membership, quotes, shares, nav, report_date, aum=aum)
     etf_daily = apply_adjusted_history_features(
@@ -1355,8 +1450,15 @@ def run_pipeline(
 
     abnormal_pool = build_abnormal_pool(etf_daily)
     write_dataframe(abnormal_pool, NORMALIZED_DIR / "abnormal_pool.parquet")
-    LOGGER.info("daily aggregation ready etf_rows=%s cluster_rows=%s abnormal_rows=%s", len(etf_daily), len(cluster_daily), len(abnormal_pool))
+    LOGGER.info(
+        "daily aggregation ready etf_rows=%s cluster_rows=%s abnormal_rows=%s elapsed_seconds=%.2f",
+        len(etf_daily),
+        len(cluster_daily),
+        len(abnormal_pool),
+        perf_counter() - stage_started,
+    )
 
+    stage_started = perf_counter()
     corporate_flags = flag_share_jumps(etf_daily)
     if not corporate_flags.empty:
         write_dataframe(corporate_flags, NORMALIZED_DIR / "corporate_action_flags.parquet")
@@ -1378,8 +1480,8 @@ def run_pipeline(
         metrics["history_trading_days"] = int(pd.to_datetime(history_snapshot["date"], errors="coerce").dropna().nunique())
     else:
         metrics["history_trading_days"] = 0
-    metrics["render_mode"] = "official_refresh"
-    metrics["official_refresh_performed"] = True
+    metrics["render_mode"] = "cache_recompute" if market_data_cache_only else "official_refresh"
+    metrics["official_refresh_performed"] = not market_data_cache_only
     metrics["cache_reason"] = ""
     metrics["source_refresh_mode"] = source_refresh_mode
     membership_validation = validate_membership(active_membership)
@@ -1388,7 +1490,8 @@ def run_pipeline(
 
     chart_dir = output_dir / "charts"
     LOGGER.info("daily generate charts")
-    chart_paths = generate_charts(quotes, etf_daily, representatives, abnormal_pool, chart_dir)
+    current_unsettled = quotes.get("date", pd.Series(None, index=quotes.index)).eq(report_date) & unsettled_quote_mask(quotes)
+    chart_paths = generate_charts(quotes.loc[~current_unsettled], etf_daily, representatives, abnormal_pool, chart_dir)
 
     report_path = output_dir / f"A股ETF资金温度日报_{report_date}.md"
     LOGGER.info("daily generate report path=%s", report_path)
@@ -1404,7 +1507,15 @@ def run_pipeline(
         chart_paths,
     )
     write_audit_outputs(report_date)
-    LOGGER.info("daily run finished date=%s formal_allowed=%s report=%s", report_date, metrics.get("formal_report_allowed"), report_path)
+    finished = perf_counter()
+    LOGGER.info(
+        "daily run finished date=%s formal_allowed=%s report=%s validation_and_render_seconds=%.2f elapsed_seconds=%.2f",
+        report_date,
+        metrics.get("formal_report_allowed"),
+        report_path,
+        finished - stage_started,
+        finished - run_started,
+    )
 
     unresolved = []
     if not metrics["formal_report_allowed"]:
@@ -1586,7 +1697,7 @@ def rebuild_history(
                         market_data_cache_only=True,
                     )
                 )
-            elif _local_snapshot_available(date_text) and not market_data_changed:
+            elif not market_data_changed and not should_refresh_report_date(date_text)[0]:
                 results.append(
                     render_report_from_cache(
                         date_text,

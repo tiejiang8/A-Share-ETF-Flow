@@ -12,6 +12,7 @@ from urllib.parse import quote
 import pandas as pd
 
 from .official_endpoints import OfficialClient, extract_first_code, normalize_date, parse_json_or_jsonp, strip_html, to_float
+from .quote_freshness import MARKET_TIMEZONE, quote_close_timestamp, unsettled_quote_mask
 
 
 SZSE_BASES = ["https://fund.szse.cn", "https://www.szse.cn"]
@@ -40,12 +41,14 @@ def _get_json_with_base_fallback(
     referer_path: str,
     raw_prefix: str,
     preferred_base: str | None = None,
+    cache_not_before: float | None = None,
 ) -> tuple[list[dict], str]:
     errors: list[str] = []
     bases = list(SZSE_BASES)
     if preferred_base in bases:
         bases.remove(preferred_base)
         bases.insert(0, preferred_base)
+    options = {} if cache_not_before is None else {"cache_not_before": cache_not_before}
     for base in bases:
         try:
             return (
@@ -53,6 +56,7 @@ def _get_json_with_base_fallback(
                     _szse_url(path_and_query, base),
                     referer=_szse_referer(referer_path, base),
                     raw_prefix=raw_prefix,
+                    **options,
                 ),
                 base,
             )
@@ -826,7 +830,7 @@ def latest_share_date(client: OfficialClient) -> str | None:
 
 
 def _quote_records_from_rows(rows: list[dict], first_base: str) -> list[dict]:
-    now = datetime.now().isoformat(timespec="seconds")
+    now = datetime.now(MARKET_TIMEZONE).replace(tzinfo=None).isoformat(timespec="seconds")
     records: list[dict] = []
     for row in rows:
         code = str(row.get("zqdm") or "").zfill(6)
@@ -875,6 +879,7 @@ def load_quote_history_from_raw_cache(raw_dir, start_date: str, end_date: str, c
         if not matched_code:
             continue
         try:
+            captured = datetime.fromtimestamp(path.stat().st_mtime, MARKET_TIMEZONE)
             text = path.read_text(encoding="utf-8")
             payload = text.split("\n\n", 1)[1] if "\n\n" in text else text
             data = parse_json_or_jsonp(payload)
@@ -883,12 +888,16 @@ def load_quote_history_from_raw_cache(raw_dir, start_date: str, end_date: str, c
             for record in _quote_records_from_rows(rows, SZSE_BASE):
                 d = normalize_date(record.get("date"))
                 if d and (not start or d >= start) and (not end or d <= end):
+                    record["retrieved_at"] = captured.replace(tzinfo=None).isoformat(timespec="seconds")
                     records.append(record)
         except Exception:
             continue
     if not records:
         return pd.DataFrame()
-    return pd.DataFrame(records).drop_duplicates(["etf_code", "date"], keep="last")
+    quotes = pd.DataFrame(records)
+    return quotes.loc[~unsettled_quote_mask(quotes)].sort_values("retrieved_at").drop_duplicates(
+        ["etf_code", "date"], keep="last",
+    )
 
 
 def _fetch_quote_history_query(
@@ -898,6 +907,7 @@ def _fetch_quote_history_query(
     *,
     code: str | None = None,
     max_pages: int | None = None,
+    cache_not_before: float | None = None,
 ) -> list[dict]:
     start = normalize_date(start_date)
     end = normalize_date(end_date)
@@ -908,11 +918,13 @@ def _fetch_quote_history_query(
     )
     if code:
         query = f"{query}&txtDMorJC={quote(str(code).zfill(6))}"
+    options = {} if cache_not_before is None else {"cache_not_before": cache_not_before}
     first, first_base = _get_json_with_base_fallback(
         client,
         query,
         referer_path=SZSE_REFERER_TREND_PATH,
         raw_prefix=f"szse_quote_{str(code).zfill(6)}_p1" if code else "szse_quote_p1",
+        **options,
     )
     tab = _report_tab(first, "tab2")
     pages = _page_count(tab)
@@ -933,6 +945,7 @@ def _fetch_quote_history_query(
                 referer_path=SZSE_REFERER_TREND_PATH,
                 raw_prefix=f"szse_quote_{str(code).zfill(6)}_p{page}" if code else f"szse_quote_p{page}",
                 preferred_base=first_base,
+                **options,
             )
             page_rows = _report_tab(data, "tab2").get("data") or []
             if not page_rows:
@@ -957,12 +970,14 @@ def fetch_quote_history(
     *,
     max_pages: int | None = None,
     max_workers: int = 64,
+    settled_for: str | None = None,
 ) -> pd.DataFrame:
+    options = {"cache_not_before": quote_close_timestamp(settled_for)} if settled_for else {}
     code_list = sorted({str(code).strip().zfill(6) for code in (codes or []) if str(code).strip()})
     if not code_list:
         LAST_WARNINGS.append("SZSE quote fetch called without target ETF codes; using capped legacy bulk query.")
         LOGGER.warning("szse quotes called without target codes; using capped legacy bulk query")
-        return pd.DataFrame(_fetch_quote_history_query(client, start_date, end_date, max_pages=max_pages))
+        return pd.DataFrame(_fetch_quote_history_query(client, start_date, end_date, max_pages=max_pages, **options))
 
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -1000,6 +1015,7 @@ def fetch_quote_history(
                 end_date,
                 code=code,
                 max_pages=page_limit,
+                **options,
             )
         finally:
             try:

@@ -9,6 +9,7 @@ from .classification_quality import classification_coverage
 from .config import load_temperature_config
 from .narrative import composite_one_sentence, validate_narrative
 from .official_endpoints import normalize_date
+from .quote_freshness import PRECLOSE_QUOTE_STATUS
 
 
 def _classification_metrics(etf_daily: pd.DataFrame) -> dict:
@@ -125,6 +126,8 @@ def coverage_metrics(
     total_size = float(weights.sum())
     source_text = etf_daily.get("source", pd.Series("", index=etf_daily.index)).fillna("")
     quote_source = etf_daily.get("quote_source", pd.Series("", index=etf_daily.index)).fillna("")
+    quote_status = etf_daily.get("quote_validation_status", pd.Series("", index=etf_daily.index))
+    unsettled_codes = etf_daily.loc[quote_status.eq(PRECLOSE_QUOTE_STATUS), "etf_code"].astype(str).tolist()
     share_source = etf_daily.get("share_source", pd.Series("", index=etf_daily.index)).fillna("")
     nav_source = etf_daily.get("nav_source", pd.Series("", index=etf_daily.index)).fillna("")
     official_pattern = r"official|cninfo_nsdk|csrc_eid|fund_company"
@@ -159,6 +162,8 @@ def coverage_metrics(
         "missing_share_codes": etf_daily.loc[~share_ok, "etf_code"].astype(str).head(50).tolist(),
         "missing_nav_codes": etf_daily.loc[~nav_ok, "etf_code"].astype(str).head(50).tolist(),
     }
+    if unsettled_codes:
+        metrics["unsettled_quote_codes"] = unsettled_codes
     metrics.update(_field_freshness(etf_daily))
     _, anchor_metrics = validate_core_anchors(universe, membership, etf_daily)
     metrics.update(anchor_metrics)
@@ -187,6 +192,7 @@ def coverage_metrics(
         "分类资金流覆盖率不足": metrics["classified_flow_coverage"] >= 0.90,
         "行情覆盖率不足": metrics["quote_coverage"] >= float(thresholds.get("daily_min_quote_coverage", 0.98)),
         "行情时点不新鲜": metrics["quote_fresh_coverage"] >= float(thresholds.get("daily_min_quote_coverage", 0.98)),
+        "存在未补齐的收盘前行情": not unsettled_codes,
         "份额覆盖率不足": metrics["share_coverage"] >= float(thresholds.get("daily_min_share_coverage", 0.98)),
         "份额时点不新鲜": metrics["share_fresh_coverage"] >= float(thresholds.get("daily_min_share_coverage", 0.98)),
         "净值覆盖率不足": metrics["nav_coverage"] >= float(thresholds.get("daily_min_nav_coverage", 0.95)),

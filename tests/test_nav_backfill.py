@@ -130,6 +130,49 @@ def test_fetch_nav_gaps_only_requests_selected_date_codes(monkeypatch):
     assert len(result) == 2
 
 
+def test_daily_bulk_nav_falls_back_only_for_missing_same_date_codes(monkeypatch):
+    day = "2026-11-05"
+    monkeypatch.setattr(csrc_eid, "DAILY_NAV_BULK_MIN_CODES", 2)
+    monkeypatch.setattr(csrc_eid, "_warm_up", lambda client: day)
+
+    def page(client, valuation_date, **options):
+        assert valuation_date == day and options["fund_name"] == "ETF"
+        return {"aaData": [
+            {"code": "510300", "shareNetValue": "4.80", "valuationDate": day},
+            {"code": "159915", "shareNetValue": "2.00", "valuationDate": "2026-11-04"},
+        ]}
+
+    requested = []
+
+    def fetch_one(client, code, valuation_date):
+        requested.append((code, valuation_date))
+        return {"etf_code": code, "date": valuation_date, "nav": 2.1}
+
+    monkeypatch.setattr(csrc_eid, "_fetch_nav_page", page)
+    monkeypatch.setattr(csrc_eid, "_fetch_nav_one", fetch_one)
+    rows = csrc_eid.fetch_nav_latest(
+        object(), ["510300", "159915"], day, sleep_seconds=0, prefer_bulk=True,
+    )
+    assert requested == [("159915", day)]
+    assert rows.set_index("etf_code")["nav"].to_dict() == {"510300": 4.8, "159915": 2.1}
+
+
+def test_malformed_daily_bulk_page_uses_existing_single_code_path(monkeypatch):
+    day = "2026-11-05"
+    monkeypatch.setattr(csrc_eid, "DAILY_NAV_BULK_MIN_CODES", 1)
+    monkeypatch.setattr(csrc_eid, "_warm_up", lambda client: day)
+    monkeypatch.setattr(csrc_eid, "_fetch_nav_page", lambda *args, **kwargs: [])
+    monkeypatch.setattr(
+        csrc_eid, "_fetch_nav_one",
+        lambda client, code, valuation_date: {"etf_code": code, "date": valuation_date, "nav": 1.0},
+    )
+
+    result = csrc_eid.fetch_nav_latest(object(), ["510300"], day, sleep_seconds=0, prefer_bulk=True)
+
+    assert result[["etf_code", "date", "nav"]].values.tolist() == [["510300", day, 1.0]]
+    assert any("格式无效" in warning for warning in csrc_eid.LAST_WARNINGS)
+
+
 def test_build_etf_daily_never_uses_future_nav():
     universe = pd.DataFrame(
         [

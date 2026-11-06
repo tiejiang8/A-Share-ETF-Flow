@@ -26,21 +26,16 @@ source of truth.
 """
 from __future__ import annotations
 
-import errno
 import hashlib
 import json
-import os
-import time
 import uuid
-from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Iterator
 
 import numpy as np
 import pandas as pd
 
-from ._atomic import atomic_replace
+from ._atomic import atomic_replace, exclusive_file_lock
 from .official_endpoints import OUTPUTS_DIR, normalize_date
 
 
@@ -179,8 +174,7 @@ def _write_if_changed(path: Path, text: str) -> bool:
     return True
 
 
-@contextmanager
-def _summary_publication_lock(outputs_root: Path, *, timeout: float = 30.0) -> Iterator[None]:
+def _summary_publication_lock(outputs_root: Path, *, timeout: float = 30.0):
     """Serialize the entire summary publication across processes.
 
     Atomic replacement protects one file, but not the read/modify/write of the
@@ -188,41 +182,7 @@ def _summary_publication_lock(outputs_root: Path, *, timeout: float = 30.0) -> I
     release could let different writers lock different files at the same path.
     The operating system releases the lock if its owner exits unexpectedly.
     """
-    outputs_root.mkdir(parents=True, exist_ok=True)
-    with (outputs_root / ".summary.lock").open("a+b") as handle:
-        if os.fstat(handle.fileno()).st_size == 0:
-            handle.write(b"\0")
-            handle.flush()
-        if os.name == "nt":
-            import msvcrt
-        else:
-            import fcntl
-        deadline = time.monotonic() + timeout
-        acquired = False
-        try:
-            while True:
-                try:
-                    handle.seek(0)
-                    if os.name == "nt":
-                        msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
-                    else:
-                        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    acquired = True
-                    break
-                except OSError as exc:
-                    if exc.errno not in {errno.EACCES, errno.EAGAIN, errno.EDEADLK}:
-                        raise
-                    if time.monotonic() >= deadline:
-                        raise TimeoutError(f"等待摘要发布锁超时: {outputs_root}") from exc
-                    time.sleep(0.05)
-            yield
-        finally:
-            if acquired:
-                handle.seek(0)
-                if os.name == "nt":
-                    msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
-                else:
-                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+    return exclusive_file_lock(outputs_root / ".summary.lock", timeout=timeout)
 
 
 def _effective_flow_frame(etf_daily: pd.DataFrame) -> pd.DataFrame:

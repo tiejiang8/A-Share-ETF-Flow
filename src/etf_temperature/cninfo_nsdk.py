@@ -6,6 +6,7 @@ from typing import Iterable
 import pandas as pd
 
 from .official_endpoints import normalize_date, ymd
+from .quote_freshness import MARKET_TIMEZONE
 
 
 CNINFO_WEBAPI_HOME = "https://webapi.cninfo.com.cn/"
@@ -38,7 +39,7 @@ def _input_rows(codes: Iterable[str] | pd.DataFrame, exchange: str | None = None
 def _records_from_payload(payload: list[dict], start_date: str, end_date: str) -> list[dict]:
     start = normalize_date(start_date)
     end = normalize_date(end_date)
-    now = datetime.now().isoformat(timespec="seconds")
+    now = datetime.now(MARKET_TIMEZONE).replace(tzinfo=None).isoformat(timespec="seconds")
     records: list[dict] = []
     for item in payload:
         code = str(item.get("code") or "").zfill(6)
